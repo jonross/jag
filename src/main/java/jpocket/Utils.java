@@ -5,7 +5,7 @@ package jpocket;
     For motivations see https://github.com/jonross/jpocket
 
     You can get the latest version at
-    https://github.com/jonross/jpocket/src/main/java/jpocket/Utils.java?raw
+    https://github.com/jonross/jpocket/tree/master/src/main/java/jpocket/Utils.java?raw
 
     The dependencies (for Gradle) are
 
@@ -35,8 +35,16 @@ package jpocket;
     DEALINGS IN THE SOFTWARE.
  */
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.function.Function;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
@@ -65,26 +73,69 @@ public class Utils {
         R apply(T t, U u) throws E;
     }
 
-    // Consume input, throwing unchecked exceptions.
+    // Create / read input, throwing unchecked exceptions.
+    // The "drain" forms don't close their input, while the "consume" forms do.
 
-    public static byte[] slurp(InputStream s) {
-        return _unchecked(() -> ByteStreams.toByteArray(s));
+    public static File file(String s) {
+        return new File(s);
     }
 
-    public static String slurp(Readable r) {
-        return _unchecked(() -> CharStreams.toString(r));
+    public static Reader reader(File file) {
+        return unchecked(() -> new FileReader(file));
     }
 
-    // Wrap any Supplier-compatible expression to convert checked exceptions to unchecked.
+    public static Reader reader(InputStream s) {
+        return new InputStreamReader(s);
+    }
 
-    private static <T,E extends Exception> T _unchecked(ThrowingSupplier<T,E> s) {
+    public static Reader buffer(Reader r) {
+        return new BufferedReader(r);
+    }
+
+    public static InputStream buffer(InputStream s) {
+        return new BufferedInputStream(s);
+    }
+
+    public static byte[] drain(InputStream s) {
+        return unchecked(() -> ByteStreams.toByteArray(s));
+    }
+
+    public static String drain(Readable r) {
+        return unchecked(() -> CharStreams.toString(r));
+    }
+
+    public static byte[] consume(InputStream s) {
+        return closing(s, x -> unchecked(() -> ByteStreams.toByteArray(x)));
+    }
+
+    public static <R extends Readable & Closeable> String consume(R r) {
+        return closing(r, x -> unchecked(() -> CharStreams.toString(r)));
+    }
+
+    public static <T extends Closeable,R> R closing(T t, Function<T,R> f) {
+        try {
+            return f.apply(t);
+        }
+        finally {
+            try {
+                t.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    // Wrap any Supplier-compatible expression, converting checked exceptions to unchecked.
+
+    private static <T,E extends Exception> T unchecked(ThrowingSupplier<T,E> s) {
         try {
             return s.get();
+        }
+        catch (RuntimeException e) {
+            throw e;
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-
-
 }
