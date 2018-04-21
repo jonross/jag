@@ -138,4 +138,21 @@ public class Utils {
             throw new RuntimeException(e);
         }
     }
+
+    // The canonical 2-tuple... how many of these are there
+
+    public final static class Pair<A,B> {
+
+        public final A first;
+        public final B second;
+
+        public Pair(A a, B b) {
+            first = a;
+            second = b;
+        }
+
+        public static <A,B> Pair<A,B> of(A a, B b) {
+            return new Pair(a, b);
+        }
+    }
 }
