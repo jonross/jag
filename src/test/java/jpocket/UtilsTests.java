@@ -5,15 +5,20 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.Map;
 
+import com.google.common.base.Joiner;
 import org.testng.annotations.Test;
 
 import static jpocket.Utils.consume;
 import static jpocket.Utils.drain;
 import static jpocket.Utils.input;
 import static jpocket.Utils.reader;
+import static jpocket.Utils.splitCsv;
+import static jpocket.Utils.splitKv;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class UtilsTests {
@@ -59,5 +64,18 @@ public class UtilsTests {
         boolean isClosed() {
             return closed;
         }
+    }
+
+    @Test
+    public void splitOnCommas() {
+        assertEquals(Joiner.on(':').join(splitCsv(" a, , b, c")), "a::b:c");
+    }
+
+    @Test
+    public void splitToMap() {
+        Map<String,String> m = splitKv("a =,  b = 2, ");
+        assertEquals(m.get("a"), "");
+        assertEquals(m.get("b"), "2");
+        assertEquals(m.size(), 2);
     }
 }
