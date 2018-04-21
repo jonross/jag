@@ -44,8 +44,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
+import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 
@@ -154,5 +157,15 @@ public class Utils {
         public static <A,B> Pair<A,B> of(A a, B b) {
             return new Pair(a, b);
         }
+    }
+
+    // Common string splits
+
+    public List<String> splitCsv(String s) {
+        return Splitter.on(',').trimResults().splitToList(s);
+    }
+
+    public Map<String,String> splitKv(String s) {
+        return Splitter.on(',').trimResults().omitEmptyStrings().withKeyValueSeparator('=').split(s);
     }
 }
