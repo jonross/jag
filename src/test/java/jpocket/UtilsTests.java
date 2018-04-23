@@ -5,17 +5,19 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Joiner;
 import org.testng.annotations.Test;
 
-import static jpocket.Utils.consume;
 import static jpocket.Utils.drain;
 import static jpocket.Utils.input;
 import static jpocket.Utils.reader;
+import static jpocket.Utils.shell;
 import static jpocket.Utils.splitCsv;
 import static jpocket.Utils.splitKv;
+import static jpocket.Utils.splitLines;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
@@ -35,21 +37,6 @@ public class UtilsTests {
         MyInputStream s = new MyInputStream(input("foo".getBytes()));
         assertEquals(drain(s), "foo".getBytes());
         assertFalse(s.isClosed());
-    }
-
-    @Test(expectedExceptions = {IOException.class},
-          expectedExceptionsMessageRegExp = "Stream closed")
-    public void consumeReader() throws IOException {
-        Reader r = reader("foo");
-        assertEquals(consume(r), "foo");
-        r.ready();
-    }
-
-    @Test
-    public void consumeInput() throws IOException {
-        MyInputStream s = new MyInputStream(input("foo".getBytes()));
-        assertEquals(consume(s), "foo".getBytes());
-        assertTrue(s.isClosed());
     }
 
     private final static class MyInputStream extends FilterInputStream {
@@ -77,5 +64,10 @@ public class UtilsTests {
         assertEquals(m.get("a"), "");
         assertEquals(m.get("b"), "2");
         assertEquals(m.size(), 2);
+    }
+
+    @Test
+    public void temp(){
+        List<String> tags = splitLines(shell("git tag").orDie().output());
     }
 }

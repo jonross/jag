@@ -7,13 +7,6 @@ package jpocket;
     You can get the latest version at
     https://github.com/jonross/jpocket/tree/master/src/main/java/jpocket/Utils.java?raw
 
-    The dependencies (for Gradle) are
-
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.8'
-    compile 'com.google.guava:guava:19.0'
-    compile 'org.slf4j:slf4j-api:1.7.21'
-    compile 'org.slf4j:slf4j-log4j12:1.7.21'
-
     Copyright (c) 2016 - 2018, Jonathan Ross <jonross@alum.mit.edu>
 
     Permission is hereby granted, free of charge, to any person obtaining a
@@ -37,24 +30,41 @@ package jpocket;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 
-import com.google.common.base.Splitter;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.CharStreams;
+import static java.lang.ProcessBuilder.Redirect.INHERIT;
+import static java.lang.ProcessBuilder.Redirect.PIPE;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
-public class Utils {
+public final class Utils {
 
-    // Versions of Supplier, Consumer, Function, and BiFunction that can throw exceptions.
+    private final static ExecutorService executors = Executors.newCachedThreadPool();
+
+    // Versions of Supplier, Consumer, BiConsumer, Function, and BiFunction that can throw exceptions.
 
     @FunctionalInterface
     public interface ThrowingSupplier<T,E extends Exception> {
@@ -67,6 +77,11 @@ public class Utils {
     }
 
     @FunctionalInterface
+    public interface ThrowingBiConsumer<T,U,E extends Exception> {
+        void accept(T t, U u) throws E;
+    }
+
+    @FunctionalInterface
     public interface ThrowingFunction<T,R,E extends Exception> {
         R apply(T t) throws E;
     }
@@ -76,43 +91,63 @@ public class Utils {
         R apply(T t, U u) throws E;
     }
 
+    @FunctionalInterface
+    public interface ThrowingRunnable<E extends Exception> {
+        void run() throws E;
+    }
+
     // Create / read input, throwing unchecked exceptions.
-    // The "drain" forms don't close their input, while the "consume" forms do.
 
     public static File file(String s) {
         return new File(s);
     }
 
-    public static Reader reader(File file) {
-        return unchecked(() -> new FileReader(file));
+    public static Reader reader(File f) {
+        return unchecked(() -> new FileReader(f));
+    }
+
+    public static Reader reader(String s) {
+        return new StringReader(s);
     }
 
     public static Reader reader(InputStream s) {
         return new InputStreamReader(s);
     }
 
-    public static Reader buffer(Reader r) {
+    public static Reader buffered(Reader r) {
         return new BufferedReader(r);
     }
 
-    public static InputStream buffer(InputStream s) {
+    public static InputStream input(File f) {
+        return unchecked(() -> new FileInputStream(f));
+    }
+
+    public static InputStream input(byte[] b) {
+        return new ByteArrayInputStream(b);
+    }
+
+    public static InputStream buffered(InputStream s) {
         return new BufferedInputStream(s);
     }
 
-    public static byte[] drain(InputStream s) {
-        return unchecked(() -> ByteStreams.toByteArray(s));
+    public static String drain(Reader r) {
+        StringWriter w = new StringWriter();
+        copy(r, w);
+        return w.toString();
     }
 
-    public static String drain(Readable r) {
-        return unchecked(() -> CharStreams.toString(r));
+    public static byte[] drain(InputStream in) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        copy(in, out);
+        return out.toByteArray();
     }
 
-    public static byte[] consume(InputStream s) {
-        return closing(s, x -> unchecked(() -> ByteStreams.toByteArray(x)));
+    public static void copy(Reader r, Writer w) {
+        unchecked(() -> _copy(r, (buf, len) -> w.write(buf, 0, len)));
     }
 
-    public static <R extends Readable & Closeable> String consume(R r) {
-        return closing(r, x -> unchecked(() -> CharStreams.toString(r)));
+    public static void copy(InputStream in, OutputStream out) {
+        unchecked(() -> _copy(in, (buf, len) -> out.write(buf, 0, len)));
     }
 
     public static <T extends Closeable,R> R closing(T t, Function<T,R> f) {
@@ -130,7 +165,7 @@ public class Utils {
 
     // Wrap any Supplier-compatible expression, converting checked exceptions to unchecked.
 
-    private static <T,E extends Exception> T unchecked(ThrowingSupplier<T,E> s) {
+    public static <T,E extends Exception> T unchecked(ThrowingSupplier<T,E> s) {
         try {
             return s.get();
         }
@@ -140,6 +175,10 @@ public class Utils {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static <E extends Exception> void unchecked(ThrowingRunnable<E> r) {
+        unchecked(() -> { r.run(); return null; });
     }
 
     // The canonical 2-tuple... how many of these are there
@@ -157,15 +196,143 @@ public class Utils {
         public static <A,B> Pair<A,B> of(A a, B b) {
             return new Pair(a, b);
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (! (o instanceof Pair)) {
+                return false;
+            }
+            Pair<?,?> that = (Pair<?,?>) o;
+            return Objects.equals(this.first, that.first) &&
+                    Objects.equals(this.second, that.second);
+        }
+
+        @Override public int hashCode() {
+            return Objects.hash(first, second);
+        }
     }
 
     // Common string splits
 
-    public List<String> splitCsv(String s) {
-        return Splitter.on(',').trimResults().splitToList(s);
+    public static List<String> splitCsv(String s) {
+        if (s.trim().equals("")) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(s.split(","))
+                .map(String::trim)
+                .collect(toList());
     }
 
-    public Map<String,String> splitKv(String s) {
-        return Splitter.on(',').trimResults().omitEmptyStrings().withKeyValueSeparator('=').split(s);
+    public static Map<String,String> splitKv(String s) {
+        Map<String,String> m = new HashMap<>();
+        Arrays.stream(s.split(","))
+                .filter(kv -> kv.contains("="))
+                .forEach(kv -> {
+                    String[] a = kv.split("=", 2);
+                    m.put(a[0].trim(), a[1].trim());
+                });
+        return m;
     }
+
+    public static List<String> splitLines(String s) {
+        String[] lines = s.trim().split("\n");
+        return lines.length == 1 && lines[0].equals("") ? Collections.emptyList() : Arrays.asList(lines);
+    }
+
+    // Run shell commands, returning exit status, output or both.
+    // If command is a single string with spaces it is run with bash -c.
+
+    public static Shell shell(String... command) {
+        return new Shell(command);
+    }
+
+    public final static class Shell {
+
+        private boolean mustSucceed = false;
+        private String[] command;
+
+        Shell(String[] command) {
+            if (command.length == 1 && command[0].contains(" ")) {
+                command = new String[]{"bash", "-c", command[0]};
+            }
+            this.command = command;
+        }
+
+        public Shell orDie() {
+            mustSucceed = true;
+            return this;
+        }
+
+        public int status() { return _execute(false).first; }
+        public String output() { return _execute(true).second; }
+        public Pair<Integer,String> result() { return _execute(true); }
+
+        private Pair<Integer,String> _execute(boolean wantOutput) {
+            return unchecked(() -> {
+                Process p = new ProcessBuilder(command).redirectOutput(wantOutput ? PIPE : INHERIT).start();
+                Future<?> f = executors.submit(() -> calmly(() -> p.waitFor()));
+                try {
+                    String stdout = closing(reader(p.getInputStream()), r -> drain(r));
+                    if (p.exitValue() != 0 && mustSucceed) {
+                        die("Command failed: " + Arrays.stream(command).collect(joining(" ")));
+                    }
+                    return Pair.of(p.exitValue(), stdout);
+                }
+                finally {
+                    f.get();
+                }
+            });
+        }
+
+    }
+
+    public static <T,E extends InterruptedException> T calmly(ThrowingSupplier<T,E> s) {
+        while (true) {
+            try {
+                return s.get();
+            }
+            catch (InterruptedException e) {
+            }
+        }
+    }
+
+    public static <E extends InterruptedException> void calmly(ThrowingRunnable<E> r) {
+        unchecked(() -> { r.run(); return null; });
+    }
+
+    public static void warn(String message) {
+        System.err.println(message);
+    }
+
+    public static void die(String message) {
+        warn(message);
+        System.exit(1);
+    }
+
+    public static String sprintf(String format, String... args) {
+        return String.format(format, args);
+    }
+
+    protected static void _copy(InputStream in, ThrowingBiConsumer<byte[],Integer,IOException> out) throws IOException {
+        byte[] buf = new byte[4096];
+        while (true) {
+            int count = in.read(buf);
+            if (count == -1) {
+                return;
+            }
+            out.accept(buf, count);
+        }
+    }
+
+    protected static void _copy(Reader r, ThrowingBiConsumer<char[],Integer,IOException> out) throws IOException {
+        char[] buf = new char[4096];
+        while (true) {
+            int count = r.read(buf);
+            if (count == -1) {
+                return;
+            }
+            out.accept(buf, count);
+        }
+    }
+
 }
