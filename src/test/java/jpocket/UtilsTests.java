@@ -1,6 +1,7 @@
 package jpocket;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +12,7 @@ import java.util.Map;
 import com.google.common.base.Joiner;
 import org.testng.annotations.Test;
 
+import static jpocket.Utils.closing;
 import static jpocket.Utils.drain;
 import static jpocket.Utils.input;
 import static jpocket.Utils.reader;
@@ -70,4 +72,11 @@ public class UtilsTests {
     public void temp(){
         List<String> tags = splitLines(shell("git tag").orDie().output());
     }
+
+    void foo() {
+        closing(input(new File("")), f -> drain(f));
+        // $.closing($.input(new File("")), $::drain);
+    }
 }
+
+

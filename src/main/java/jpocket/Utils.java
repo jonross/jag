@@ -35,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,12 +45,14 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -60,7 +63,7 @@ import static java.lang.ProcessBuilder.Redirect.PIPE;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
-public final class Utils {
+public final class Utils extends Base {
 
     private final static ExecutorService executors = Executors.newCachedThreadPool();
 
@@ -99,35 +102,35 @@ public final class Utils {
     // Create / read input, throwing unchecked exceptions.
 
     public static File file(String s) {
-        return new File(s);
+        return new JPFile(s);
     }
 
     public static Reader reader(File f) {
-        return unchecked(() -> new FileReader(f));
+        return unchecked(() -> new JPFileReader(f));
     }
 
     public static Reader reader(String s) {
-        return new StringReader(s);
+        return new JPStringReader(s);
     }
 
     public static Reader reader(InputStream s) {
-        return new InputStreamReader(s);
+        return new JPInputStreamReader(s);
     }
 
     public static Reader buffered(Reader r) {
-        return new BufferedReader(r);
+        return new JPBufferedReader(r);
     }
 
     public static InputStream input(File f) {
-        return unchecked(() -> new FileInputStream(f));
+        return unchecked(() -> new JPFileInputStream(f));
     }
 
     public static InputStream input(byte[] b) {
-        return new ByteArrayInputStream(b);
+        return new JPByteArrayInputStream(b);
     }
 
     public static InputStream buffered(InputStream s) {
-        return new BufferedInputStream(s);
+        return new JPBufferedInputStream(s);
     }
 
     public static String drain(Reader r) {
@@ -239,6 +242,34 @@ public final class Utils {
         return lines.length == 1 && lines[0].equals("") ? Collections.emptyList() : Arrays.asList(lines);
     }
 
+    //
+    //
+
+    public static Optional<Integer> toInt(String s) {
+        return numeric(s, Integer::parseInt);
+    }
+
+    public static Optional<Long> toLong(String s) {
+        return numeric(s, Long::parseLong);
+    }
+
+    public static Optional<Float> toFloat(String s) {
+        return numeric(s, Float::parseFloat);
+    }
+
+    public static Optional<Double> Double(String s) {
+        return numeric(s, Double::parseDouble);
+    }
+
+    private static <T extends Number> Optional<T> numeric(String s, Function<String,T> f) {
+        try {
+            return Optional.of(f.apply(s));
+        }
+        catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+    }
+
     // Run shell commands, returning exit status, output or both.
     // If command is a single string with spaces it is run with bash -c.
 
@@ -335,4 +366,80 @@ public final class Utils {
         }
     }
 
+    public static <T,E extends InterruptedException> Optional<T> wait(Duration duration, ThrowingSupplier<T,E> s) {
+        long start = System.currentTimeMillis();
+        while (! duration.isNegative() && ! duration.isZero()) {
+            try {
+                return Optional.ofNullable(s.get());
+            }
+            catch (InterruptedException e) {
+                long end = System.currentTimeMillis();
+                duration = duration.minusMillis(end - start);
+                start = end;
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static <E extends InterruptedException> void wait(Duration duration, ThrowingRunnable<E> r) {
+        wait(duration, () -> { r.run(); return null; });
+    }
+
+    public static Duration forever() {
+        return Duration.ofDays(365 * 1000);
+    }
+
+}
+
+class Base {
+
+    // For future extension of java.io expressions
+
+    public static class JPFile extends File {
+        public JPFile(String pathname) {
+            super(pathname);
+        }
+    }
+
+    public static class JPFileReader extends FileReader {
+        public JPFileReader(File file) throws FileNotFoundException {
+            super(file);
+        }
+    }
+
+    public static class JPStringReader extends StringReader {
+        public JPStringReader(String s) {
+            super(s);
+        }
+    }
+
+    public static class JPInputStreamReader extends InputStreamReader {
+        public JPInputStreamReader(InputStream in) {
+            super(in);
+        }
+    }
+
+    public static class JPBufferedReader extends BufferedReader {
+        public JPBufferedReader(Reader in) {
+            super(in);
+        }
+    }
+
+    public static class JPFileInputStream extends FileInputStream {
+        public JPFileInputStream(File file) throws FileNotFoundException {
+            super(file);
+        }
+    }
+
+    public static class JPByteArrayInputStream extends ByteArrayInputStream {
+        public JPByteArrayInputStream(byte[] buf) {
+            super(buf);
+        }
+    }
+
+    public static class JPBufferedInputStream extends BufferedInputStream {
+        public JPBufferedInputStream(InputStream in) {
+            super(in);
+        }
+    }
 }
