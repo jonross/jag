@@ -49,14 +49,19 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static java.lang.ProcessBuilder.Redirect.INHERIT;
 import static java.lang.ProcessBuilder.Redirect.PIPE;
@@ -153,6 +158,8 @@ public final class Utils extends Base {
         unchecked(() -> _copy(in, (buf, len) -> out.write(buf, 0, len)));
     }
 
+    // Operate on a Closeable and automatically close it when done.
+
     public static <T extends Closeable,R> R closing(T t, Function<T,R> f) {
         try {
             return f.apply(t);
@@ -238,8 +245,8 @@ public final class Utils extends Base {
     }
 
     public static List<String> splitLines(String s) {
-        String[] lines = s.trim().split("\n");
-        return lines.length == 1 && lines[0].equals("") ? Collections.emptyList() : Arrays.asList(lines);
+        List<String> lines = Arrays.stream(s.trim().split("\n")).map(String::trim).collect(toList());
+        return lines.size() == 1 && lines.get(0).equals("") ? Collections.emptyList() : lines;
     }
 
     //
@@ -257,13 +264,13 @@ public final class Utils extends Base {
         return numeric(s, Float::parseFloat);
     }
 
-    public static Optional<Double> Double(String s) {
+    public static Optional<Double> toDouble(String s) {
         return numeric(s, Double::parseDouble);
     }
 
     private static <T extends Number> Optional<T> numeric(String s, Function<String,T> f) {
         try {
-            return Optional.of(f.apply(s));
+            return s == null ? Optional.empty() : Optional.of(f.apply(s));
         }
         catch (NumberFormatException e) {
             return Optional.empty();
@@ -387,6 +394,16 @@ public final class Utils extends Base {
 
     public static Duration forever() {
         return Duration.ofDays(365 * 1000);
+    }
+
+    // Stream support
+
+    public static <T> Stream<T> stream(Iterable<T> it) {
+        return StreamSupport.stream(it.spliterator(), false);
+    }
+
+    public static <T> Stream<T> stream(Iterator<T> it) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false);
     }
 
 }
