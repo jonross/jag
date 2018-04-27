@@ -70,6 +70,8 @@ import static java.util.stream.Collectors.toList;
 
 public final class $ extends Base {
 
+    public final static $ $ = new $();
+
     private final static ExecutorService executors = Executors.newCachedThreadPool();
 
     // Versions of Supplier, Consumer, BiConsumer, Function, and BiFunction that can throw exceptions.
@@ -106,61 +108,61 @@ public final class $ extends Base {
 
     // Create / read input, throwing unchecked exceptions.
 
-    public static File file(String s) {
+    public File file(String s) {
         return new JPFile(s);
     }
 
-    public static Reader reader(File f) {
+    public Reader reader(File f) {
         return unchecked(() -> new JPFileReader(f));
     }
 
-    public static Reader reader(String s) {
+    public Reader reader(String s) {
         return new JPStringReader(s);
     }
 
-    public static Reader reader(InputStream s) {
+    public Reader reader(InputStream s) {
         return new JPInputStreamReader(s);
     }
 
-    public static Reader buffered(Reader r) {
+    public Reader buffered(Reader r) {
         return new JPBufferedReader(r);
     }
 
-    public static InputStream input(File f) {
+    public InputStream input(File f) {
         return unchecked(() -> new JPFileInputStream(f));
     }
 
-    public static InputStream input(byte[] b) {
+    public InputStream input(byte[] b) {
         return new JPByteArrayInputStream(b);
     }
 
-    public static InputStream buffered(InputStream s) {
+    public InputStream buffered(InputStream s) {
         return new JPBufferedInputStream(s);
     }
 
-    public static String drain(Reader r) {
+    public String drain(Reader r) {
         StringWriter w = new StringWriter();
         copy(r, w);
         return w.toString();
     }
 
-    public static byte[] drain(InputStream in) {
+    public byte[] drain(InputStream in) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         copy(in, out);
         return out.toByteArray();
     }
 
-    public static void copy(Reader r, Writer w) {
+    public void copy(Reader r, Writer w) {
         unchecked(() -> _copy(r, (buf, len) -> w.write(buf, 0, len)));
     }
 
-    public static void copy(InputStream in, OutputStream out) {
+    public void copy(InputStream in, OutputStream out) {
         unchecked(() -> _copy(in, (buf, len) -> out.write(buf, 0, len)));
     }
 
     // Operate on a Closeable and automatically close it when done.
 
-    public static <T extends Closeable,R> R closing(T t, Function<T,R> f) {
+    public <T extends Closeable,R> R closing(T t, Function<T,R> f) {
         try {
             return f.apply(t);
         }
@@ -175,7 +177,7 @@ public final class $ extends Base {
 
     // Wrap any Supplier-compatible expression, converting checked exceptions to unchecked.
 
-    public static <T,E extends Exception> T unchecked(ThrowingSupplier<T,E> s) {
+    public <T,E extends Exception> T unchecked(ThrowingSupplier<T,E> s) {
         try {
             return s.get();
         }
@@ -187,7 +189,7 @@ public final class $ extends Base {
         }
     }
 
-    public static <E extends Exception> void unchecked(ThrowingRunnable<E> r) {
+    public <E extends Exception> void unchecked(ThrowingRunnable<E> r) {
         unchecked(() -> { r.run(); return null; });
     }
 
@@ -224,7 +226,7 @@ public final class $ extends Base {
 
     // Common string splits
 
-    public static List<String> splitCsv(String s) {
+    public List<String> splitCsv(String s) {
         if (s.trim().equals("")) {
             return Collections.emptyList();
         }
@@ -233,7 +235,7 @@ public final class $ extends Base {
                 .collect(toList());
     }
 
-    public static Map<String,String> splitKv(String s) {
+    public Map<String,String> splitKv(String s) {
         Map<String,String> m = new HashMap<>();
         Arrays.stream(s.split(","))
                 .filter(kv -> kv.contains("="))
@@ -244,7 +246,7 @@ public final class $ extends Base {
         return m;
     }
 
-    public static List<String> splitLines(String s) {
+    public List<String> splitLines(String s) {
         List<String> lines = Arrays.stream(s.trim().split("\n")).map(String::trim).collect(toList());
         return lines.size() == 1 && lines.get(0).equals("") ? Collections.emptyList() : lines;
     }
@@ -252,19 +254,19 @@ public final class $ extends Base {
     //
     //
 
-    public static Optional<Integer> toInt(String s) {
+    public Optional<Integer> toInt(String s) {
         return numeric(s, Integer::parseInt);
     }
 
-    public static Optional<Long> toLong(String s) {
+    public Optional<Long> toLong(String s) {
         return numeric(s, Long::parseLong);
     }
 
-    public static Optional<Float> toFloat(String s) {
+    public Optional<Float> toFloat(String s) {
         return numeric(s, Float::parseFloat);
     }
 
-    public static Optional<Double> toDouble(String s) {
+    public Optional<Double> toDouble(String s) {
         return numeric(s, Double::parseDouble);
     }
 
@@ -280,11 +282,11 @@ public final class $ extends Base {
     // Run shell commands, returning exit status, output or both.
     // If command is a single string with spaces it is run with bash -c.
 
-    public static Shell shell(String... command) {
+    public Shell shell(String... command) {
         return new Shell(command);
     }
 
-    public final static class Shell {
+    public final class Shell {
 
         private boolean mustSucceed = false;
         private String[] command;
@@ -324,7 +326,7 @@ public final class $ extends Base {
 
     }
 
-    public static <T,E extends InterruptedException> T calmly(ThrowingSupplier<T,E> s) {
+    public <T,E extends InterruptedException> T calmly(ThrowingSupplier<T,E> s) {
         while (true) {
             try {
                 return s.get();
@@ -334,20 +336,20 @@ public final class $ extends Base {
         }
     }
 
-    public static <E extends InterruptedException> void calmly(ThrowingRunnable<E> r) {
+    public <E extends InterruptedException> void calmly(ThrowingRunnable<E> r) {
         unchecked(() -> { r.run(); return null; });
     }
 
-    public static void warn(String message) {
+    public void warn(String message) {
         System.err.println(message);
     }
 
-    public static void die(String message) {
+    public void die(String message) {
         warn(message);
         System.exit(1);
     }
 
-    public static String sprintf(String format, String... args) {
+    public String sprintf(String format, Object... args) {
         return String.format(format, args);
     }
 
@@ -373,7 +375,7 @@ public final class $ extends Base {
         }
     }
 
-    public static <T,E extends InterruptedException> Optional<T> wait(Duration duration, ThrowingSupplier<T,E> s) {
+    public <T,E extends InterruptedException> Optional<T> wait(Duration duration, ThrowingSupplier<T,E> s) {
         long start = System.currentTimeMillis();
         while (! duration.isNegative() && ! duration.isZero()) {
             try {
@@ -388,21 +390,21 @@ public final class $ extends Base {
         return Optional.empty();
     }
 
-    public static <E extends InterruptedException> void wait(Duration duration, ThrowingRunnable<E> r) {
+    public <E extends InterruptedException> void wait(Duration duration, ThrowingRunnable<E> r) {
         wait(duration, () -> { r.run(); return null; });
     }
 
-    public static Duration forever() {
+    public Duration forever() {
         return Duration.ofDays(365 * 1000);
     }
 
     // Stream support
 
-    public static <T> Stream<T> stream(Iterable<T> it) {
+    public <T> Stream<T> stream(Iterable<T> it) {
         return StreamSupport.stream(it.spliterator(), false);
     }
 
-    public static <T> Stream<T> stream(Iterator<T> it) {
+    public <T> Stream<T> stream(Iterator<T> it) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false);
     }
 
