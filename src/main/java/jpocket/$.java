@@ -68,7 +68,7 @@ import static java.lang.ProcessBuilder.Redirect.PIPE;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
-public final class Utils extends Base {
+public final class $ extends Base {
 
     private final static ExecutorService executors = Executors.newCachedThreadPool();
 
