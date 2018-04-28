@@ -46,6 +46,7 @@ import java.io.Writer;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -395,6 +396,15 @@ public final class $ {
         catch (NumberFormatException e) {
             return OptionalDouble.empty();
         }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // enum helpers
+
+    public <E extends Enum<E>> EnumSet<E> toEnums(Class<E> cls, List<String> l) {
+        List<E> enums = l.stream().map(s -> Enum.valueOf(cls, s)).collect(toList());
+        return enums.isEmpty() ? EnumSet.noneOf(cls) : EnumSet.copyOf(enums);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
