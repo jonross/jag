@@ -72,7 +72,7 @@ public class UtilsTests {
 
     @Test
     public void splitToMap() {
-        Map<String,String> m = $.splitKv("a =,  b = 2, ");
+        Map<String,String> m = $.splitToMap("a =,  b = 2, ");
         assertEquals(m.get("a"), "");
         assertEquals(m.get("b"), "2");
         assertEquals(m.size(), 2);
@@ -80,12 +80,12 @@ public class UtilsTests {
 
     @Test
     public void splitLinesBasic() {
-        _assertEntries($.splitLines("\n a  \n b \n\nc\n"), "a", "b", "", "c");
+        _assertEntries($.splitNonblankLines("\n a  \n b \n\nc\n"), "a", "b", "c");
     }
 
     @Test
     public void splitLinesBlankOutput() {
-        assertEquals($.splitLines("\n \n").size(), 0);
+        assertEquals($.splitNonblankLines("\n \n").size(), 0);
     }
 
     private static <T> void _assertEntries(Iterable<T> actual, T... expected) {

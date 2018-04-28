@@ -203,8 +203,6 @@ public final class $ {
 
     // help with Closeables
 
-    // Operate on a Closeable and automatically close it when done.
-
     public <T extends Closeable,R> R closing(T t, Function<T,R> f) {
         try {
             return f.apply(t);
@@ -247,18 +245,17 @@ public final class $ {
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
     // Common string splits
 
     public List<String> splitCsv(String s) {
-        if (s.trim().equals("")) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(s.split(","))
-                .map(String::trim)
-                .collect(toList());
+        return s.trim().equals("")
+            ? Collections.emptyList()
+            : Arrays.stream(s.split(",")) .map(String::trim) .collect(toList());
     }
 
-    public Map<String,String> splitKv(String s) {
+    public Map<String,String> splitToMap(String s) {
         Map<String,String> m = new HashMap<>();
         Arrays.stream(s.split(","))
                 .filter(kv -> kv.contains("="))
@@ -269,9 +266,11 @@ public final class $ {
         return m;
     }
 
-    public List<String> splitLines(String s) {
-        List<String> lines = Arrays.stream(s.trim().split("\n")).map(String::trim).collect(toList());
-        return lines.size() == 1 && lines.get(0).equals("") ? Collections.emptyList() : lines;
+    public List<String> splitNonblankLines(String s) {
+        return Arrays.stream(s.trim().split("\n"))
+                .map(String::trim)
+                .filter(line -> !line.equals(""))
+                .collect(toList());
     }
 
     //
