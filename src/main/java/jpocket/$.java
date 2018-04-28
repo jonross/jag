@@ -35,9 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -59,7 +57,10 @@ import java.util.Spliterators;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -68,36 +69,36 @@ import static java.lang.ProcessBuilder.Redirect.PIPE;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
-public final class $ extends Base {
+public final class $ {
 
     public final static $ $ = new $();
 
-    private final static ExecutorService executors = Executors.newCachedThreadPool();
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Versions of Supplier, Consumer, BiConsumer, Function, and BiFunction that can throw exceptions.
+    // mirror common functional interfaces with versions that can throw
 
     @FunctionalInterface
-    public interface ThrowingSupplier<T,E extends Exception> {
+    public interface ThrowingSupplier<T, E extends Exception> {
         T get() throws E;
     }
 
     @FunctionalInterface
-    public interface ThrowingConsumer<T,E extends Exception> {
+    public interface ThrowingConsumer<T, E extends Exception> {
         void accept(T t) throws E;
     }
 
     @FunctionalInterface
-    public interface ThrowingBiConsumer<T,U,E extends Exception> {
+    public interface ThrowingBiConsumer<T, U, E extends Exception> {
         void accept(T t, U u) throws E;
     }
 
     @FunctionalInterface
-    public interface ThrowingFunction<T,R,E extends Exception> {
+    public interface ThrowingFunction<T, R, E extends Exception> {
         R apply(T t) throws E;
     }
 
     @FunctionalInterface
-    public interface ThrowingBiFunction<T,U,R,E extends Exception> {
+    public interface ThrowingBiFunction<T, U, R, E extends Exception> {
         R apply(T t, U u) throws E;
     }
 
@@ -106,78 +107,11 @@ public final class $ extends Base {
         void run() throws E;
     }
 
-    // Create / read input, throwing unchecked exceptions.
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public File file(String s) {
-        return new JPFile(s);
-    }
+    // wrap allow any value-providing or void expression to hide checked exceptions
 
-    public Reader reader(File f) {
-        return unchecked(() -> new JPFileReader(f));
-    }
-
-    public Reader reader(String s) {
-        return new JPStringReader(s);
-    }
-
-    public Reader reader(InputStream s) {
-        return new JPInputStreamReader(s);
-    }
-
-    public Reader buffered(Reader r) {
-        return new JPBufferedReader(r);
-    }
-
-    public InputStream input(File f) {
-        return unchecked(() -> new JPFileInputStream(f));
-    }
-
-    public InputStream input(byte[] b) {
-        return new JPByteArrayInputStream(b);
-    }
-
-    public InputStream buffered(InputStream s) {
-        return new JPBufferedInputStream(s);
-    }
-
-    public String drain(Reader r) {
-        StringWriter w = new StringWriter();
-        copy(r, w);
-        return w.toString();
-    }
-
-    public byte[] drain(InputStream in) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        copy(in, out);
-        return out.toByteArray();
-    }
-
-    public void copy(Reader r, Writer w) {
-        unchecked(() -> _copy(r, (buf, len) -> w.write(buf, 0, len)));
-    }
-
-    public void copy(InputStream in, OutputStream out) {
-        unchecked(() -> _copy(in, (buf, len) -> out.write(buf, 0, len)));
-    }
-
-    // Operate on a Closeable and automatically close it when done.
-
-    public <T extends Closeable,R> R closing(T t, Function<T,R> f) {
-        try {
-            return f.apply(t);
-        }
-        finally {
-            try {
-                t.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    // Wrap any Supplier-compatible expression, converting checked exceptions to unchecked.
-
-    public <T,E extends Exception> T unchecked(ThrowingSupplier<T,E> s) {
+    public <T, E extends Exception> T unchecked(ThrowingSupplier<T, E> s) {
         try {
             return s.get();
         }
@@ -191,6 +125,93 @@ public final class $ extends Base {
 
     public <E extends Exception> void unchecked(ThrowingRunnable<E> r) {
         unchecked(() -> { r.run(); return null; });
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // help with Readers and Writers
+
+    public Reader buffered(Reader r) {
+        return new BufferedReader(r);
+    }
+
+    public Reader reader(File f) {
+        return unchecked(() -> new FileReader(f));
+    }
+
+    public Reader reader(InputStream s) {
+        return new InputStreamReader(s);
+    }
+
+    public Reader reader(String s) {
+        return new StringReader(s);
+    }
+
+    public String drain(Reader r) {
+        return copy(r, new StringWriter()).second.toString();
+    }
+
+    public <R extends Reader, W extends Writer> Pair<R, W> copy(R r, W w) {
+        return unchecked(() -> {
+            char[] buf = new char[4096];
+            while (true) {
+                int count = r.read(buf);
+                if (count == -1) {
+                    break;
+                }
+                w.write(buf, 0, count);
+            }
+            return Pair.of(r, w);
+        });
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // help with InputStreams and OutputStreams
+
+    public InputStream buffered(InputStream s) {
+        return new BufferedInputStream(s);
+    }
+
+    public InputStream input(byte[] b) {
+        return new ByteArrayInputStream(b);
+    }
+
+    public InputStream input(File f) {
+        return unchecked(() -> new FileInputStream(f));
+    }
+
+    public byte[] drain(InputStream in) {
+        return copy(in, new ByteArrayOutputStream()).second.toByteArray();
+    }
+
+    public <I extends InputStream, O extends OutputStream> Pair<I, O> copy(I in, O out) {
+        return unchecked(() -> {
+            byte[] buf = new byte[4096];
+            while (true) {
+                int count = in.read(buf);
+                if (count == -1) {
+                    break;
+                }
+                out.write(buf, 0, count);
+            }
+            return Pair.of(in, out);
+        });
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // help with Closeables
+
+    // Operate on a Closeable and automatically close it when done.
+
+    public <T extends Closeable,R> R closing(T t, Function<T,R> f) {
+        try {
+            return f.apply(t);
+        }
+        finally {
+            unchecked(() -> t.close());
+        }
     }
 
     // The canonical 2-tuple... how many of these are there
@@ -254,31 +275,6 @@ public final class $ extends Base {
     //
     //
 
-    public Optional<Integer> toInt(String s) {
-        return numeric(s, Integer::parseInt);
-    }
-
-    public Optional<Long> toLong(String s) {
-        return numeric(s, Long::parseLong);
-    }
-
-    public Optional<Float> toFloat(String s) {
-        return numeric(s, Float::parseFloat);
-    }
-
-    public Optional<Double> toDouble(String s) {
-        return numeric(s, Double::parseDouble);
-    }
-
-    private static <T extends Number> Optional<T> numeric(String s, Function<String,T> f) {
-        try {
-            return s == null ? Optional.empty() : Optional.of(f.apply(s));
-        }
-        catch (NumberFormatException e) {
-            return Optional.empty();
-        }
-    }
-
     // Run shell commands, returning exit status, output or both.
     // If command is a single string with spaces it is run with bash -c.
 
@@ -340,39 +336,8 @@ public final class $ extends Base {
         unchecked(() -> { r.run(); return null; });
     }
 
-    public void warn(String message) {
-        System.err.println(message);
-    }
-
-    public void die(String message) {
-        warn(message);
-        System.exit(1);
-    }
-
     public String sprintf(String format, Object... args) {
         return String.format(format, args);
-    }
-
-    protected static void _copy(InputStream in, ThrowingBiConsumer<byte[],Integer,IOException> out) throws IOException {
-        byte[] buf = new byte[4096];
-        while (true) {
-            int count = in.read(buf);
-            if (count == -1) {
-                return;
-            }
-            out.accept(buf, count);
-        }
-    }
-
-    protected static void _copy(Reader r, ThrowingBiConsumer<char[],Integer,IOException> out) throws IOException {
-        char[] buf = new char[4096];
-        while (true) {
-            int count = r.read(buf);
-            if (count == -1) {
-                return;
-            }
-            out.accept(buf, count);
-        }
     }
 
     public <T,E extends InterruptedException> Optional<T> wait(Duration duration, ThrowingSupplier<T,E> s) {
@@ -398,67 +363,92 @@ public final class $ extends Base {
         return Duration.ofDays(365 * 1000);
     }
 
-    // Stream support
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public <T> Stream<T> stream(Iterable<T> it) {
-        return StreamSupport.stream(it.spliterator(), false);
+    // numeric conversion
+
+    public Optional<Integer> toInt(String s) {
+        return numeric(s, Integer::parseInt);
     }
 
-    public <T> Stream<T> stream(Iterator<T> it) {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false);
+    public Optional<Long> toLong(String s) {
+        return numeric(s, Long::parseLong);
+    }
+
+    public Optional<Float> toFloat(String s) {
+        return numeric(s, Float::parseFloat);
+    }
+
+    public Optional<Double> toDouble(String s) {
+        return numeric(s, Double::parseDouble);
+    }
+
+    private static <T extends Number> Optional<T> numeric(String s, Function<String,T> f) {
+        try {
+            return s == null ? Optional.empty() : Optional.of(f.apply(s));
+        }
+        catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // regex helpers
+
+    public Pattern re(String s) {
+        return Pattern.compile(s);
+    }
+
+    public Optional<String> extract(Pattern pattern, int group, String target) {
+        Matcher m = pattern.matcher(target);
+        return Optional.ofNullable(m.find() ? m.group(group) : null);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // thread helpers
+
+    private final static AtomicInteger threadSerial = new AtomicInteger();
+
+    private final static ExecutorService executors = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r);
+        t.setDaemon(true);
+        t.setName($.sprintf("jpocket-%d", threadSerial.incrementAndGet()));
+        return t;
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // uncategorized
+
+    public File file(String s) {
+        return new File(s);
+    }
+
+    public void warn(String message) {
+        System.err.println(message);
+    }
+
+    public void die(String message) {
+        warn(message);
+        System.exit(1);
+    }
+
+    public <T> List<T> list(T... a) { return Arrays.asList(a); }
+    public <T> Stream<T> stream(Iterable<T> it) { return StreamSupport.stream(it.spliterator(), false); }
+    public <T> Stream<T> stream(Iterator<T> it) { return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false); }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // experimental, may be removed at any time
+
+    private <T,E extends Exception> T chain(T t, ThrowingConsumer<T,E>... actions) {
+        for (ThrowingConsumer<T,E> action: actions) {
+            unchecked(() -> action.accept(t));
+        }
+        return t;
     }
 
 }
 
-class Base {
-
-    // For future extension of java.io expressions
-
-    public static class JPFile extends File {
-        public JPFile(String pathname) {
-            super(pathname);
-        }
-    }
-
-    public static class JPFileReader extends FileReader {
-        public JPFileReader(File file) throws FileNotFoundException {
-            super(file);
-        }
-    }
-
-    public static class JPStringReader extends StringReader {
-        public JPStringReader(String s) {
-            super(s);
-        }
-    }
-
-    public static class JPInputStreamReader extends InputStreamReader {
-        public JPInputStreamReader(InputStream in) {
-            super(in);
-        }
-    }
-
-    public static class JPBufferedReader extends BufferedReader {
-        public JPBufferedReader(Reader in) {
-            super(in);
-        }
-    }
-
-    public static class JPFileInputStream extends FileInputStream {
-        public JPFileInputStream(File file) throws FileNotFoundException {
-            super(file);
-        }
-    }
-
-    public static class JPByteArrayInputStream extends ByteArrayInputStream {
-        public JPByteArrayInputStream(byte[] buf) {
-            super(buf);
-        }
-    }
-
-    public static class JPBufferedInputStream extends BufferedInputStream {
-        public JPBufferedInputStream(InputStream in) {
-            super(in);
-        }
-    }
-}
