@@ -52,6 +52,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.ExecutorService;
@@ -60,6 +63,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -332,7 +336,7 @@ public final class $ {
 
     // help with things that throw InterruptedException e.g. to implement an accurate Thread.sleep
     //
-    //      $.calmly($.duration("PT2S"), Thread::sleep);
+    //      $.waitFor($.duration("PT2S"), (t, u) -> Thread::sleep(t));
 
     public Duration duration(String s) {
         return Duration.parse(s);
@@ -366,28 +370,30 @@ public final class $ {
 
     // numeric conversion
 
-    public Optional<Integer> toInt(String s) {
-        return numeric(s, Integer::parseInt);
-    }
-
-    public Optional<Long> toLong(String s) {
-        return numeric(s, Long::parseLong);
-    }
-
-    public Optional<Float> toFloat(String s) {
-        return numeric(s, Float::parseFloat);
-    }
-
-    public Optional<Double> toDouble(String s) {
-        return numeric(s, Double::parseDouble);
-    }
-
-    private static <T extends Number> Optional<T> numeric(String s, Function<String,T> f) {
+    public OptionalInt toInt(String s) {
         try {
-            return s == null ? Optional.empty() : Optional.of(f.apply(s));
+            return s != null ? OptionalInt.of(Integer.parseInt(s)) : OptionalInt.empty();
         }
         catch (NumberFormatException e) {
-            return Optional.empty();
+            return OptionalInt.empty();
+        }
+    }
+
+    public OptionalLong toLong(String s) {
+        try {
+            return s != null ? OptionalLong.of(Long.parseLong(s)) : OptionalLong.empty();
+        }
+        catch (NumberFormatException e) {
+            return OptionalLong.empty();
+        }
+    }
+
+    public OptionalDouble toDouble(String s) {
+        try {
+            return s != null ? OptionalDouble.of(Double.parseDouble(s)) : OptionalDouble.empty();
+        }
+        catch (NumberFormatException e) {
+            return OptionalDouble.empty();
         }
     }
 
