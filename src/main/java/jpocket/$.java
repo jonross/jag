@@ -109,7 +109,7 @@ public final class $ {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // wrap allow any value-providing or void expression to hide checked exceptions
+    // wrap any value-providing or void expression to hide checked exceptions
 
     public <T, E extends Exception> T unchecked(ThrowingSupplier<T, E> s) {
         try {
@@ -161,7 +161,7 @@ public final class $ {
                 }
                 w.write(buf, 0, count);
             }
-            return Pair.of(r, w);
+            return pair(r, w);
         });
     }
 
@@ -195,7 +195,7 @@ public final class $ {
                 }
                 out.write(buf, 0, count);
             }
-            return Pair.of(in, out);
+            return pair(in, out);
         });
     }
 
@@ -214,7 +214,13 @@ public final class $ {
         }
     }
 
-    // The canonical 2-tuple... how many of these are there
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // support two-valued returns
+
+    public <A, B> Pair<A, B> pair(A a, B b) {
+        return new Pair(a, b);
+    }
 
     public final static class Pair<A,B> {
 
@@ -224,10 +230,6 @@ public final class $ {
         public Pair(A a, B b) {
             first = a;
             second = b;
-        }
-
-        public static <A,B> Pair<A,B> of(A a, B b) {
-            return new Pair(a, b);
         }
 
         @Override
@@ -309,10 +311,11 @@ public final class $ {
                 Future<?> f = executors.submit(() -> calmly(() -> p.waitFor()));
                 try {
                     String stdout = closing(reader(p.getInputStream()), r -> drain(r));
+                    f.get();
                     if (p.exitValue() != 0 && mustSucceed) {
                         die("Command failed: " + Arrays.stream(command).collect(joining(" ")));
                     }
-                    return Pair.of(p.exitValue(), stdout);
+                    return pair(p.exitValue(), stdout);
                 }
                 finally {
                     f.get();
