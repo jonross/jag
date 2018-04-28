@@ -28,4 +28,14 @@ public class ShellTests {
     public void testBigOutput() {
         assertEquals($.shell("yes yes | sed 10000q").output().length(), 40000);
     }
+
+    @Test
+    public void testUnmergedStderr() {
+        assertEquals($.shell("echo foo >&2; echo bar").output(), "bar\n");
+    }
+
+    @Test
+    public void testMergedStderr() {
+        assertEquals($.shell("echo foo >&2; echo bar").mergeStderr().output(), "bar\nfoo\n");
+    }
 }

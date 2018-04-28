@@ -273,11 +273,9 @@ public final class $ {
                 .collect(toList());
     }
 
-    //
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Run shell commands, returning exit status, output or both.
-    // If command is a single string with spaces it is run with bash -c.
+    // shell helper
 
     public Shell shell(String... command) {
         return new Shell(command);
@@ -286,6 +284,7 @@ public final class $ {
     public final class Shell {
 
         private boolean mustSucceed = false;
+        private boolean mergeStderr = false;
         private String[] command;
 
         Shell(String[] command) {
@@ -300,28 +299,32 @@ public final class $ {
             return this;
         }
 
+        public Shell mergeStderr() {
+            mergeStderr = true;
+            return this;
+        }
+
         public int status() { return _execute(false).first; }
         public String output() { return _execute(true).second; }
         public Pair<Integer,String> result() { return _execute(true); }
 
         private Pair<Integer,String> _execute(boolean wantOutput) {
             return unchecked(() -> {
-                Process p = new ProcessBuilder(command).redirectOutput(wantOutput ? PIPE : INHERIT).start();
-                Future<?> f = executors.submit(() -> calmly(() -> p.waitFor()));
-                try {
-                    String stdout = closing(reader(p.getInputStream()), r -> drain(r));
-                    f.get();
-                    if (p.exitValue() != 0 && mustSucceed) {
-                        die("Command failed: " + Arrays.stream(command).collect(joining(" ")));
-                    }
-                    return pair(p.exitValue(), stdout);
+                Process p = new ProcessBuilder(command)
+                        .redirectOutput(wantOutput ? PIPE : INHERIT)
+                        .redirectError(wantOutput & mergeStderr ? PIPE : INHERIT)
+                        .start();
+                Future<String> stdoutReader =
+                        executors.submit(() -> closing(p.getInputStream(), in -> drain(reader(in))));
+                Future<String> stderrReader = ! mergeStderr ? null :
+                        executors.submit(() -> closing(p.getErrorStream(), in -> drain(reader(in))));
+                calmly(() -> p.waitFor());
+                if (p.exitValue() != 0 && mustSucceed) {
+                    die("Command failed: " + Arrays.stream(command).collect(joining(" ")));
                 }
-                finally {
-                    f.get();
-                }
+                return pair(p.exitValue(), stdoutReader.get() + (mergeStderr ? stderrReader.get() : ""));
             });
         }
-
     }
 
     public <T,E extends InterruptedException> T calmly(ThrowingSupplier<T,E> s) {
