@@ -57,6 +57,7 @@ import java.util.Spliterators;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -318,7 +319,7 @@ public final class $ {
                         executors.submit(() -> closing(p.getInputStream(), in -> drain(reader(in))));
                 Future<String> stderrReader = ! mergeStderr ? null :
                         executors.submit(() -> closing(p.getErrorStream(), in -> drain(reader(in))));
-                calmly(() -> p.waitFor());
+                int exitValue = waitOn($.forever(), p::waitFor).get();
                 if (p.exitValue() != 0 && mustSucceed) {
                     die("Command failed: " + Arrays.stream(command).collect(joining(" ")));
                 }
@@ -327,41 +328,34 @@ public final class $ {
         }
     }
 
-    public <T,E extends InterruptedException> T calmly(ThrowingSupplier<T,E> s) {
-        while (true) {
-            try {
-                return s.get();
-            }
-            catch (InterruptedException e) {
-            }
-        }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // help with things that throw InterruptedException e.g. to implement an accurate Thread.sleep
+    //
+    //      $.calmly($.duration("PT2S"), Thread::sleep);
+
+    public Duration duration(String s) {
+        return Duration.parse(s);
     }
 
-    public <E extends InterruptedException> void calmly(ThrowingRunnable<E> r) {
-        unchecked(() -> { r.run(); return null; });
-    }
-
-    public String sprintf(String format, Object... args) {
-        return String.format(format, args);
-    }
-
-    public <T,E extends InterruptedException> Optional<T> wait(Duration duration, ThrowingSupplier<T,E> s) {
+    public <T, E extends InterruptedException> Optional<T> waitFor(Duration duration, ThrowingBiFunction<Long, TimeUnit, T, E> waiter) {
         long start = System.currentTimeMillis();
-        while (! duration.isNegative() && ! duration.isZero()) {
+        long remain = duration.toMillis();
+        while (remain > 0) {
             try {
-                return Optional.ofNullable(s.get());
+                return Optional.ofNullable(waiter.apply(remain, TimeUnit.MILLISECONDS));
             }
             catch (InterruptedException e) {
-                long end = System.currentTimeMillis();
-                duration = duration.minusMillis(end - start);
-                start = end;
+                long now = System.currentTimeMillis();
+                remain -= now - start;
+                start = now;
             }
         }
         return Optional.empty();
     }
 
-    public <E extends InterruptedException> void wait(Duration duration, ThrowingRunnable<E> r) {
-        wait(duration, () -> { r.run(); return null; });
+    public <T, E extends InterruptedException> Optional<T> waitOn(Duration duration, ThrowingSupplier<T, E> waiter) {
+        return waitFor(duration, (t, u) -> waiter.get());
     }
 
     public Duration forever() {
@@ -426,6 +420,10 @@ public final class $ {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // uncategorized
+
+    public String sprintf(String format, Object... args) {
+        return String.format(format, args);
+    }
 
     public File file(String s) {
         return new File(s);
