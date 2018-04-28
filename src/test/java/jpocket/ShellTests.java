@@ -23,4 +23,9 @@ public class ShellTests {
         assertEquals($.shell("echo foo; echo bar").result(), $.pair(0, "foo\nbar\n"));
         assertEquals($.shell("echo foo; echo bar; exit 3").result(), $.pair(3, "foo\nbar\n"));
     }
+
+    @Test
+    public void testBigOutput() {
+        assertEquals($.shell("yes yes | sed 10000q").output().length(), 40000);
+    }
 }
