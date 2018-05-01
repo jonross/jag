@@ -308,28 +308,23 @@ public final class $ {
 
     // Common string splits
 
-    public List<String> splitCsv(String s) {
-        return s.trim().equals("")
-            ? Collections.emptyList()
-            : Arrays.stream(s.split(",")) .map(String::trim) .collect(toList());
+    public List<String> split(String s, String delimiter, int limit, boolean clean) {
+        Stream<String> result = Arrays.stream(limit > 0 ? s.split(delimiter, limit) : s.split(delimiter));
+        if (clean) {
+            result = result.map(String::trim).filter(part -> ! part.equals(""));
+        }
+        return result.collect(toList());
     }
 
-    public Map<String,String> splitToMap(String s) {
+    public Map<String,String> split(String s, String delimiter, String keyValueDelimiter, boolean clean) {
         Map<String,String> m = new HashMap<>();
-        Arrays.stream(s.split(","))
-                .filter(kv -> kv.contains("="))
+        Arrays.stream(s.split(delimiter))
+                .filter(kv -> kv.contains(keyValueDelimiter))
                 .forEach(kv -> {
-                    String[] a = kv.split("=", 2);
-                    m.put(a[0].trim(), a[1].trim());
+                    String[] a = kv.split(keyValueDelimiter, 2);
+                    m.put(a[0].trim(), clean ? a[1].trim() : a[1]);
                 });
         return m;
-    }
-
-    public List<String> splitNonblankLines(String s) {
-        return Arrays.stream(s.trim().split("\n"))
-                .map(String::trim)
-                .filter(line -> !line.equals(""))
-                .collect(toList());
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
