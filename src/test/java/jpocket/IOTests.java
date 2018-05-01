@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
+import jpocket.Utils.TestInputStream;
+import jpocket.Utils.TestReader;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -23,48 +25,35 @@ import static jpocket.$.$;
 public class IOTests {
 
     @Test
-    public void drainReaderDontClose() throws IOException {
-        Reader r = $.reader("foo");
+    public void drainReader() throws IOException {
+        TestReader r = new TestReader($.reader("foo"));
         assertEquals($.drain(r), "foo");
-        assertTrue(r.ready());
-    }
-
-    @Test(expectedExceptions = {IOException.class},
-          expectedExceptionsMessageRegExp = "Stream closed")
-    public void drainReaderAndClose() throws IOException {
-        Reader r = $.reader("foo");
-        assertEquals($.closing(r, r0 -> $.drain(r0)), "foo");
-        assertFalse(r.ready());
+        assertTrue(r.wasClosed());
     }
 
     @Test
-    public void drainInputDontClose() throws IOException {
-        MyInputStream s = new MyInputStream($.input("foo".getBytes()));
-        assertEquals($.drain(s), "foo".getBytes());
-        assertFalse(s.isClosed());
+    public void drainInputStream() throws IOException {
+        TestInputStream in = new TestInputStream($.input("foo".getBytes()));
+        assertEquals($.drain(in), "foo".getBytes());
+        assertTrue(in.wasClosed());
     }
 
     @Test
-    public void drainInputAndClose() throws IOException {
-        MyInputStream s = new MyInputStream($.input("foo".getBytes()));
-        assertEquals($.closing(s, s0 -> $.drain(s0)), "foo".getBytes());
-        assertTrue(s.isClosed());
+    public void testFiles() throws IOException {
+        File f = File.createTempFile("jpocket-temp", "txt");
+        f.deleteOnExit();
+        $.emit($.writer(f), "foo");
+        assertEquals($.drain($.reader(f)), "foo");
+        $.emit($.output(f), "bar".getBytes());
+        assertEquals($.drain($.input(f)), "bar".getBytes());
     }
 
-    private final static class MyInputStream extends FilterInputStream {
-        private boolean closed;
-        MyInputStream(InputStream s) {
-            super(s);
-        }
-        public void close() throws IOException {
-            super.close();
-            closed = true;
-        }
-        boolean isClosed() {
-            return closed;
-        }
+    @Test
+    public void testResource() {
+        assertFalse($.resource(getClass(), "noresource.txt").isPresent());
+        assertEquals($.drain($.input($.resource(getClass(), "resource.txt").get())),
+                "This is a resource.\n".getBytes());
     }
-
 }
 
 

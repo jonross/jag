@@ -35,7 +35,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -43,6 +45,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.URL;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
@@ -141,10 +144,6 @@ public final class $ {
         return new BufferedReader(r);
     }
 
-    public Reader reader(File f) {
-        return unchecked(() -> new FileReader(f));
-    }
-
     public Reader reader(InputStream s) {
         return new InputStreamReader(s);
     }
@@ -153,8 +152,19 @@ public final class $ {
         return new StringReader(s);
     }
 
+    public Writer writer(File f) {
+        return unchecked(() -> new FileWriter(f));
+    }
+
     public String drain(Reader r) {
-        return copy(r, new StringWriter()).second.toString();
+        return closing(r, __ -> copy(r, new StringWriter()).second.toString());
+    }
+
+    public void emit(Writer w, String s) {
+        closing(w, __ -> unchecked(() -> {
+            w.write(s);
+            return null;
+        }));
     }
 
     public <R extends Reader, W extends Writer> Pair<R, W> copy(R r, W w) {
@@ -183,12 +193,19 @@ public final class $ {
         return new ByteArrayInputStream(b);
     }
 
-    public InputStream input(File f) {
-        return unchecked(() -> new FileInputStream(f));
+    public OutputStream output(File f) {
+        return unchecked(() -> new FileOutputStream(f));
     }
 
     public byte[] drain(InputStream in) {
-        return copy(in, new ByteArrayOutputStream()).second.toByteArray();
+        return closing(in, __ -> copy(in, new ByteArrayOutputStream()).second.toByteArray());
+    }
+
+    public void emit(OutputStream out, byte[] b) {
+        closing(out, __ -> unchecked(() -> {
+            out.write(b);
+            return null;
+        }));
     }
 
     public <I extends InputStream, O extends OutputStream> Pair<I, O> copy(I in, O out) {
@@ -203,6 +220,30 @@ public final class $ {
             }
             return pair(in, out);
         });
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // help with files and resources
+
+    public File file(String s) {
+        return new File(s);
+    }
+
+    public Reader reader(File f) {
+        return unchecked(() -> new FileReader(f));
+    }
+
+    public InputStream input(File f) {
+        return unchecked(() -> new FileInputStream(f));
+    }
+
+    public InputStream input(URL url) {
+        return unchecked(() -> url.openStream());
+    }
+
+    public Optional<URL> resource(Class<?> cls, String name) {
+        return Optional.ofNullable(cls.getResource(name));
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -321,9 +362,9 @@ public final class $ {
                         .redirectError(wantOutput & mergeStderr ? PIPE : INHERIT)
                         .start();
                 Future<String> stdoutReader =
-                        executors.submit(() -> closing(p.getInputStream(), in -> drain(reader(in))));
+                        executors.submit(() -> drain(reader(p.getInputStream())));
                 Future<String> stderrReader = ! mergeStderr ? null :
-                        executors.submit(() -> closing(p.getErrorStream(), in -> drain(reader(in))));
+                        executors.submit(() -> drain(reader(p.getErrorStream())));
                 int exitValue = waitOn($.forever(), p::waitFor).get();
                 if (p.exitValue() != 0 && mustSucceed) {
                     die("Command failed: " + Arrays.stream(command).collect(joining(" ")));
@@ -439,10 +480,6 @@ public final class $ {
 
     public String sprintf(String format, Object... args) {
         return String.format(format, args);
-    }
-
-    public File file(String s) {
-        return new File(s);
     }
 
     public void warn(String message) {
