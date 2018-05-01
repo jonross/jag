@@ -1,7 +1,7 @@
 package jpocket;
 
 /*
-    This is JPocket 0.6.25
+    This is JPocket 0.6.28
     For motivations see https://github.com/jonross/jpocket
 
     You can get the latest version at
@@ -66,6 +66,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -157,14 +158,15 @@ public final class $ {
     }
 
     public String drain(Reader r) {
-        return closing(r, __ -> copy(r, new StringWriter()).second.toString());
+        return closing(r, __ -> {
+            return copy(r, new StringWriter()).second.toString();
+        });
     }
 
     public void emit(Writer w, String s) {
-        closing(w, __ -> unchecked(() -> {
-            w.write(s);
-            return null;
-        }));
+        closing(w, __ -> {
+            unchecked(() -> w.write(s));
+        });
     }
 
     public <R extends Reader, W extends Writer> Pair<R, W> copy(R r, W w) {
@@ -198,14 +200,15 @@ public final class $ {
     }
 
     public byte[] drain(InputStream in) {
-        return closing(in, __ -> copy(in, new ByteArrayOutputStream()).second.toByteArray());
+        return closing(in, __ -> {
+            return copy(in, new ByteArrayOutputStream()).second.toByteArray();
+        });
     }
 
     public void emit(OutputStream out, byte[] b) {
-        closing(out, __ -> unchecked(() -> {
-            out.write(b);
-            return null;
-        }));
+        closing(out, __ -> {
+            unchecked(() -> out.write(b));
+        });
     }
 
     public <I extends InputStream, O extends OutputStream> Pair<I, O> copy(I in, O out) {
@@ -249,6 +252,15 @@ public final class $ {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // help with Closeables
+
+    public <T extends Closeable> void closing(T t, Consumer<T> f) {
+        try {
+            f.accept(t);
+        }
+        finally {
+            unchecked(() -> t.close());
+        }
+    }
 
     public <T extends Closeable,R> R closing(T t, Function<T,R> f) {
         try {
