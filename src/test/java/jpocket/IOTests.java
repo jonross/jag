@@ -50,8 +50,10 @@ public class IOTests {
 
     @Test
     public void testResource() {
-        assertFalse($.resource(getClass(), "noresource.txt").isPresent());
-        assertEquals($.drain($.input($.resource(getClass(), "resource.txt").get())),
+        assertFalse($.resource("noresource.txt", getClass()).isPresent());
+        assertEquals($.drain($.input($.resource("resource.txt", getClass()).get())),
+                "This is a resource.\n".getBytes());
+        assertEquals($.drain($.input($.resource("/jpocket/resource.txt", getClass()).get())),
                 "This is a resource.\n".getBytes());
     }
 }

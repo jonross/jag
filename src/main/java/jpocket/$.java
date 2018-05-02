@@ -41,11 +41,15 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
@@ -229,8 +233,15 @@ public final class $ {
 
     // help with files and resources
 
-    public File file(String s) {
-        return new File(s);
+    public Optional<File> file(String s) {
+        File file = new File(s);
+        return file.exists() ? Optional.of(file) : Optional.empty();
+    }
+
+    public Optional<URL> resource(String path, Class<?> cls) {
+        return path.startsWith("/")
+                ? Optional.ofNullable(cls.getClassLoader().getResource(path.substring(1)))
+                : Optional.ofNullable(cls.getResource(path));
     }
 
     public Reader reader(File f) {
@@ -245,8 +256,9 @@ public final class $ {
         return unchecked(() -> url.openStream());
     }
 
-    public Optional<URL> resource(Class<?> cls, String name) {
-        return Optional.ofNullable(cls.getResource(name));
+    public Path chmod(Path path, String mode) {
+        unchecked(() -> Files.setPosixFilePermissions(path, PosixFilePermissions.fromString(mode)));
+        return path;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -498,19 +510,16 @@ public final class $ {
         System.exit(1);
     }
 
-    public <T> List<T> list(T... a) { return Arrays.asList(a); }
-    public <T> Stream<T> stream(Iterable<T> it) { return StreamSupport.stream(it.spliterator(), false); }
-    public <T> Stream<T> stream(Iterator<T> it) { return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false); }
+    public <T> List<T> list(T... a) {
+        return Arrays.asList(a);
+    }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    public <T> Stream<T> stream(Iterable<T> it) {
+        return StreamSupport.stream(it.spliterator(), false);
+    }
 
-    // experimental, may be removed at any time
-
-    private <T,E extends Exception> T chain(T t, ThrowingConsumer<T,E>... actions) {
-        for (ThrowingConsumer<T,E> action: actions) {
-            unchecked(() -> action.accept(t));
-        }
-        return t;
+    public <T> Stream<T> stream(Iterator<T> it) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false);
     }
 
 }
