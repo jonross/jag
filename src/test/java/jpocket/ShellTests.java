@@ -3,6 +3,8 @@ package jpocket;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+
+import jpocket.$;
 import static jpocket.$.$;
 
 public class ShellTests {

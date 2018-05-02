@@ -41,7 +41,6 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -52,7 +51,6 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -70,6 +68,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -83,9 +82,31 @@ import static java.lang.ProcessBuilder.Redirect.PIPE;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
-public final class $ {
+public class $ {
 
     public final static $ $ = new $();
+
+    private final Function<String,String> paramLookup;
+    private final Function<String,RuntimeException> failer1;
+    private final Function<Throwable,RuntimeException> failer2;
+    private final BiFunction<String,Throwable,RuntimeException> failer3;
+
+    $() {
+        this(s -> s,
+                RuntimeException::new,
+                RuntimeException::new,
+                RuntimeException::new);
+    }
+
+    $(Function<String,String> paramLookup,
+      Function<String,RuntimeException> failer1,
+      Function<Throwable,RuntimeException> failer2,
+      BiFunction<String,Throwable,RuntimeException> failer3) {
+        this.paramLookup = paramLookup;
+        this.failer1 = failer1;
+        this.failer2 = failer2;
+        this.failer3 = failer3;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -133,7 +154,7 @@ public final class $ {
             throw e;
         }
         catch (Exception e) {
-            throw new RuntimeException(e);
+            throw failer2.apply(e);
         }
     }
 
@@ -320,6 +341,10 @@ public final class $ {
 
     // Common string splits
 
+    public List<String> split(String s, String delimiter) {
+        return split(s, delimiter, 0, true);
+    }
+
     public List<String> split(String s, String delimiter, int limit, boolean clean) {
         Stream<String> result = Arrays.stream(limit > 0 ? s.split(delimiter, limit) : s.split(delimiter));
         if (clean) {
@@ -328,13 +353,13 @@ public final class $ {
         return result.collect(toList());
     }
 
-    public Map<String,String> split(String s, String delimiter, String keyValueDelimiter, boolean clean) {
+    public Map<String,String> split(String s, String delimiter, String keyValueDelimiter) {
         Map<String,String> m = new HashMap<>();
         Arrays.stream(s.split(delimiter))
                 .filter(kv -> kv.contains(keyValueDelimiter))
                 .forEach(kv -> {
                     String[] a = kv.split(keyValueDelimiter, 2);
-                    m.put(a[0].trim(), clean ? a[1].trim() : a[1]);
+                    m.put(a[0].trim(), a[1].trim());
                 });
         return m;
     }
@@ -433,6 +458,7 @@ public final class $ {
 
     public OptionalInt toInt(String s) {
         try {
+            s = paramLookup.apply(s);
             return s != null ? OptionalInt.of(Integer.parseInt(s)) : OptionalInt.empty();
         }
         catch (NumberFormatException e) {
@@ -442,6 +468,7 @@ public final class $ {
 
     public OptionalLong toLong(String s) {
         try {
+            s = paramLookup.apply(s);
             return s != null ? OptionalLong.of(Long.parseLong(s)) : OptionalLong.empty();
         }
         catch (NumberFormatException e) {
@@ -451,11 +478,20 @@ public final class $ {
 
     public OptionalDouble toDouble(String s) {
         try {
+            s = paramLookup.apply(s);
             return s != null ? OptionalDouble.of(Double.parseDouble(s)) : OptionalDouble.empty();
         }
         catch (NumberFormatException e) {
             return OptionalDouble.empty();
         }
+    }
+
+    public Optional<String> toString(String s) {
+        return Optional.ofNullable(paramLookup.apply(s));
+    }
+
+    public Supplier<RuntimeException> bad(String s) {
+        return () -> failer1.apply(s);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -510,7 +546,7 @@ public final class $ {
         System.exit(1);
     }
 
-    public <T> List<T> list(T... a) {
+    public <T> List<T> listOf(T... a) {
         return Arrays.asList(a);
     }
 
@@ -520,6 +556,14 @@ public final class $ {
 
     public <T> Stream<T> stream(Iterator<T> it) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public $ failWith(Function<String,RuntimeException> f1,
+                      Function<Throwable,RuntimeException> f2,
+                      BiFunction<String,Throwable,RuntimeException> f3) {
+        return new $(paramLookup, f1, f2, f3);
     }
 
 }
