@@ -1,7 +1,7 @@
 package jpocket;
 
 /*
-    This is JPocket 0.6.28
+    This is JPocket 0.29.0
     For motivations see https://github.com/jonross/jpocket
 
     You can get the latest version at
