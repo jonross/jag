@@ -4,8 +4,7 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 
-import jpocket.$;
-import static jpocket.$.$;
+import static jpocket.Jag.$;
 
 public class ShellTests {
 

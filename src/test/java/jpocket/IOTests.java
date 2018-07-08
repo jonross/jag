@@ -1,15 +1,7 @@
 package jpocket;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FilterInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.StreamSupport;
 
 import jpocket.Utils.TestInputStream;
 import jpocket.Utils.TestReader;
@@ -20,7 +12,7 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-import static jpocket.$.$;
+import static jpocket.Jag.$;
 
 public class IOTests {
 

@@ -82,26 +82,26 @@ import static java.lang.ProcessBuilder.Redirect.PIPE;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
-public class $ {
+public class Jag {
 
-    public final static $ $ = new $();
+    public final static Jag $ = new Jag();
 
     private final Function<String,String> paramLookup;
     private final Function<String,RuntimeException> failer1;
     private final Function<Throwable,RuntimeException> failer2;
     private final BiFunction<String,Throwable,RuntimeException> failer3;
 
-    $() {
+    Jag() {
         this(s -> s,
                 RuntimeException::new,
                 RuntimeException::new,
                 RuntimeException::new);
     }
 
-    $(Function<String,String> paramLookup,
-      Function<String,RuntimeException> failer1,
-      Function<Throwable,RuntimeException> failer2,
-      BiFunction<String,Throwable,RuntimeException> failer3) {
+    Jag(Function<String,String> paramLookup,
+        Function<String,RuntimeException> failer1,
+        Function<Throwable,RuntimeException> failer2,
+        BiFunction<String,Throwable,RuntimeException> failer3) {
         this.paramLookup = paramLookup;
         this.failer1 = failer1;
         this.failer2 = failer2;
@@ -560,10 +560,10 @@ public class $ {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public $ failWith(Function<String,RuntimeException> f1,
-                      Function<Throwable,RuntimeException> f2,
-                      BiFunction<String,Throwable,RuntimeException> f3) {
-        return new $(paramLookup, f1, f2, f3);
+    public Jag failWith(Function<String,RuntimeException> f1,
+                        Function<Throwable,RuntimeException> f2,
+                        BiFunction<String,Throwable,RuntimeException> f3) {
+        return new Jag(paramLookup, f1, f2, f3);
     }
 
 }

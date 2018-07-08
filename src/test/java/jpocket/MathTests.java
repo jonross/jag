@@ -3,7 +3,7 @@ package jpocket;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
-import static jpocket.$.$;
+import static jpocket.Jag.$;
 
 public class MathTests {
 
