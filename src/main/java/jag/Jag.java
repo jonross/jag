@@ -1,7 +1,7 @@
 package jag;
 
 /*
-    This is Jag 2.30.0
+    This is Jag 2.30.1
     For motivations see https://github.com/jonross/jag
 
     You can get the latest version at
@@ -90,25 +90,15 @@ public class Jag {
     public final static Jag $ = new Jag();
 
     private final Function<String,String> paramLookup;
-    private final Function<String,RuntimeException> failer1;
-    private final Function<Throwable,RuntimeException> failer2;
-    private final BiFunction<String,Throwable,RuntimeException> failer3;
+    private final BiFunction<String,Throwable,? extends RuntimeException> failer;
 
     Jag() {
-        this(s -> s,
-                RuntimeException::new,
-                RuntimeException::new,
-                RuntimeException::new);
+        this(s -> s, Jag::defaultFailer);
     }
 
-    Jag(Function<String,String> paramLookup,
-        Function<String,RuntimeException> failer1,
-        Function<Throwable,RuntimeException> failer2,
-        BiFunction<String,Throwable,RuntimeException> failer3) {
+    Jag(Function<String,String> paramLookup, BiFunction<String,Throwable,? extends RuntimeException> failer) {
         this.paramLookup = paramLookup;
-        this.failer1 = failer1;
-        this.failer2 = failer2;
-        this.failer3 = failer3;
+        this.failer = failer;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +147,7 @@ public class Jag {
             throw e;
         }
         catch (Exception e) {
-            throw failer2.apply(e);
+            throw failer.apply(null, e);
         }
     }
 
@@ -494,7 +484,7 @@ public class Jag {
     }
 
     public Supplier<RuntimeException> bad(String s) {
-        return () -> failer1.apply(s);
+        return () -> failer.apply(s, null);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -563,10 +553,15 @@ public class Jag {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Jag failWith(Function<String,RuntimeException> f1,
-                        Function<Throwable,RuntimeException> f2,
-                        BiFunction<String,Throwable,RuntimeException> f3) {
-        return new Jag(paramLookup, f1, f2, f3);
+    public Jag failWith(BiFunction<String,Throwable,? extends RuntimeException> f) {
+        return new Jag(paramLookup, f);
+    }
+
+    private static RuntimeException defaultFailer(String s, Throwable t) {
+        return s == null && t == null ? new RuntimeException() :
+                s == null ? new RuntimeException(t) :
+                t == null ? new RuntimeException(s) :
+                new RuntimeException(s, t);
     }
 
 }
