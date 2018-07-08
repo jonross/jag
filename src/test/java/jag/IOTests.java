@@ -1,10 +1,10 @@
-package jpocket;
+package jag;
 
 import java.io.File;
 import java.io.IOException;
 
-import jpocket.Utils.TestInputStream;
-import jpocket.Utils.TestReader;
+import jag.Utils.TestInputStream;
+import jag.Utils.TestReader;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -12,7 +12,7 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-import static jpocket.Jag.$;
+import static jag.Jag.$;
 
 public class IOTests {
 
@@ -32,7 +32,7 @@ public class IOTests {
 
     @Test
     public void testFiles() throws IOException {
-        File f = File.createTempFile("jpocket-temp", "txt");
+        File f = File.createTempFile("jag-temp", "txt");
         f.deleteOnExit();
         $.emit($.writer(f), "foo");
         assertEquals($.drain($.reader(f)), "foo");
@@ -45,7 +45,7 @@ public class IOTests {
         assertFalse($.resource("noresource.txt", getClass()).isPresent());
         assertEquals($.drain($.input($.resource("resource.txt", getClass()).get())),
                 "This is a resource.\n".getBytes());
-        assertEquals($.drain($.input($.resource("/jpocket/resource.txt", getClass()).get())),
+        assertEquals($.drain($.input($.resource("/jag/resource.txt", getClass()).get())),
                 "This is a resource.\n".getBytes());
     }
 }

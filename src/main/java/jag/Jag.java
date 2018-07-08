@@ -1,13 +1,16 @@
-package jpocket;
+package jag;
 
 /*
-    This is JPocket 0.29.0
-    For motivations see https://github.com/jonross/jpocket
+    This is Jag 2.30.0
+    For motivations see https://github.com/jonross/jag
 
     You can get the latest version at
-    https://github.com/jonross/jpocket/tree/master/src/main/java/jpocket/Utils.java?raw
+    https://github.com/jonross/jag/tree/master/src/main/java/jag/Jag.java?raw
 
-    Copyright (c) 2016 - 2018, Jonathan Ross <jonross@alum.mit.edu>
+    Jag 0.x aka jduffel circa 2009 - 2011, unpublished
+    Jag 1.x aka underj circa 2014 - 2016, unpublished
+
+    Jag 2.x is copyright (c) 2016 - 2018, Jonathan Ross <jonross@alum.mit.edu>
 
     Permission is hereby granted, free of charge, to any person obtaining a
     copy of this software and associated documentation files (the "Software"),
@@ -525,7 +528,7 @@ public class Jag {
     private final static ExecutorService executors = Executors.newCachedThreadPool(r -> {
         Thread t = new Thread(r);
         t.setDaemon(true);
-        t.setName($.sprintf("jpocket-%d", threadSerial.incrementAndGet()));
+        t.setName($.sprintf("jag-%d", threadSerial.incrementAndGet()));
         return t;
     });
 

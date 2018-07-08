@@ -1,4 +1,4 @@
-package jpocket;
+package jag;
 
 import java.io.FilterInputStream;
 import java.io.FilterReader;
