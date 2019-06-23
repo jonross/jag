@@ -11,6 +11,7 @@ test {
 }
 
 dependencies {
+    compile 'com.google.code.findbugs:annotations:3.0.1'
     testCompile 'org.testng:testng:6.9.12'
 }
 
