@@ -1,16 +1,6 @@
 
-These are useful methods and tiny utility classes that I often reach for when coding prototypes.
+An archive of several Java "utility method" projects I've had over the years.
 
-They really should be factored into more classes and smartly documented for the enterprise, like
-Guava and Apache Commons.  But I have no pretensions that more than a couple people will ever see
-this, so in keeping with YAGNI, everything is piled into one class that you can paste into a
-project, rather like pasting a JS library script tag into a web page.
+Some of this is active, some defunct.  The active bit is under `src/com/github/jonross/stuff4j`.
 
-There are no dependencies apart from Java 8.
-
-Some other nice tools for cranking out demos quickly:
-
-* https://immutables.github.io/
-* https://github.com/jOOQ/jOOL
-* https://bitbucket.org/atlassian/fugue
-* https://vuejs.org/ (if you're a server side guy and don't want to be buried in crap when you need a quick UI, this is your framework)
+There are no runtime dependencies apart from Java 9.
