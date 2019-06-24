@@ -89,18 +89,6 @@ public class Jag {
 
     public final static Jag $ = new Jag();
 
-    private final Function<String,String> paramLookup;
-    private final BiFunction<String,Throwable,? extends RuntimeException> failer;
-
-    Jag() {
-        this(s -> s, Jag::defaultFailer);
-    }
-
-    Jag(Function<String,String> paramLookup, BiFunction<String,Throwable,? extends RuntimeException> failer) {
-        this.paramLookup = paramLookup;
-        this.failer = failer;
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // mirror common functional interfaces with versions that can throw
@@ -143,11 +131,8 @@ public class Jag {
         try {
             return s.get();
         }
-        catch (RuntimeException e) {
-            throw e;
-        }
         catch (Exception e) {
-            throw failer.apply(null, e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -332,33 +317,6 @@ public class Jag {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Common string splits
-
-    public List<String> split(String s, String delimiter) {
-        return split(s, delimiter, 0, true);
-    }
-
-    public List<String> split(String s, String delimiter, int limit, boolean clean) {
-        Stream<String> result = Arrays.stream(limit > 0 ? s.split(delimiter, limit) : s.split(delimiter));
-        if (clean) {
-            result = result.map(String::trim).filter(part -> ! part.equals(""));
-        }
-        return result.collect(toList());
-    }
-
-    public Map<String,String> split(String s, String delimiter, String keyValueDelimiter) {
-        Map<String,String> m = new HashMap<>();
-        Arrays.stream(s.split(delimiter))
-                .filter(kv -> kv.contains(keyValueDelimiter))
-                .forEach(kv -> {
-                    String[] a = kv.split(keyValueDelimiter, 2);
-                    m.put(a[0].trim(), a[1].trim());
-                });
-        return m;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
     // shell helper
 
     public Shell shell(String... command) {
@@ -447,70 +405,6 @@ public class Jag {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // numeric conversion
-
-    public OptionalInt toInt(String s) {
-        try {
-            s = paramLookup.apply(s);
-            return s != null ? OptionalInt.of(Integer.parseInt(s)) : OptionalInt.empty();
-        }
-        catch (NumberFormatException e) {
-            return OptionalInt.empty();
-        }
-    }
-
-    public OptionalLong toLong(String s) {
-        try {
-            s = paramLookup.apply(s);
-            return s != null ? OptionalLong.of(Long.parseLong(s)) : OptionalLong.empty();
-        }
-        catch (NumberFormatException e) {
-            return OptionalLong.empty();
-        }
-    }
-
-    public OptionalDouble toDouble(String s) {
-        try {
-            s = paramLookup.apply(s);
-            return s != null ? OptionalDouble.of(Double.parseDouble(s)) : OptionalDouble.empty();
-        }
-        catch (NumberFormatException e) {
-            return OptionalDouble.empty();
-        }
-    }
-
-    public Optional<String> toString(String s) {
-        return Optional.ofNullable(paramLookup.apply(s));
-    }
-
-    public Supplier<RuntimeException> bad(String s) {
-        return () -> failer.apply(s, null);
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // enum helpers
-
-    public <E extends Enum<E>> EnumSet<E> toEnums(Class<E> cls, List<String> l) {
-        List<E> enums = l.stream().map(s -> Enum.valueOf(cls, s)).collect(toList());
-        return enums.isEmpty() ? EnumSet.noneOf(cls) : EnumSet.copyOf(enums);
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // regex helpers
-
-    public Pattern re(String s) {
-        return Pattern.compile(s);
-    }
-
-    public Optional<String> extract(Pattern pattern, int group, String target) {
-        Matcher m = pattern.matcher(target);
-        return Optional.ofNullable(m.find() ? m.group(group) : null);
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
     // thread helpers
 
     private final static AtomicInteger threadSerial = new AtomicInteger();
@@ -518,17 +412,13 @@ public class Jag {
     private final static ExecutorService executors = Executors.newCachedThreadPool(r -> {
         Thread t = new Thread(r);
         t.setDaemon(true);
-        t.setName($.sprintf("jag-%d", threadSerial.incrementAndGet()));
+        t.setName(String.format("jag-%d", threadSerial.incrementAndGet()));
         return t;
     });
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // uncategorized
-
-    public String sprintf(String format, Object... args) {
-        return String.format(format, args);
-    }
 
     public void warn(String message) {
         System.err.println(message);
@@ -539,29 +429,12 @@ public class Jag {
         System.exit(1);
     }
 
-    public <T> List<T> listOf(T... a) {
-        return Arrays.asList(a);
-    }
-
     public <T> Stream<T> stream(Iterable<T> it) {
         return StreamSupport.stream(it.spliterator(), false);
     }
 
     public <T> Stream<T> stream(Iterator<T> it) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false);
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public Jag failWith(BiFunction<String,Throwable,? extends RuntimeException> f) {
-        return new Jag(paramLookup, f);
-    }
-
-    private static RuntimeException defaultFailer(String s, Throwable t) {
-        return s == null && t == null ? new RuntimeException() :
-                s == null ? new RuntimeException(t) :
-                t == null ? new RuntimeException(s) :
-                new RuntimeException(s, t);
     }
 
 }

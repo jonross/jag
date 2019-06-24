@@ -1,6 +1,9 @@
-package jag;
+package org.github.jonross.stuff4j.tbd;
 
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+
+import javax.annotation.Nullable;
 
 import org.github.jonross.stuff4j.lang.Throwing;
 
@@ -27,7 +30,7 @@ public class Try<T>
 
     public static <T,E extends Exception> Try<T> to(Throwing.Supplier<T,E> s)
     {
-        return TrySetup.to(s);
+        return new TrySetup(null).to(s);
     }
 
     public <U,E extends Exception> Try<U> map(Throwing.Function<? super T, ? extends U,E> f)
@@ -62,19 +65,37 @@ public class Try<T>
         }
     }
 
+    public T get()
+    {
+        Result<T> result = step.get();
+        if (result.error != null)
+        {
+            if (result.error instanceof RuntimeException)
+            {
+                throw ((RuntimeException) result.error);
+            }
+            throw new RuntimeException(result.error);
+        }
+        return result.value;
+    }
+
+    /**
+     * This builder class is the actual implementation of
+     */
+
     public final static class TrySetup
     {
-        private final static int log;
+        final @Nullable BiConsumer<String,? extends Exception> logger;
 
-        private TrySetup()
+        private TrySetup(@Nullable BiConsumer<String,? extends Exception> logger)
         {
-
+            this.logger = logger;
         }
-        public static <T,E extends Exception> Try<T> to(Throwing.Supplier<T,E> s)
+
+        public <T,E extends Exception> Try<T> to(Throwing.Supplier<T,E> s)
         {
             // To start the chain, behave like map() but supply a dummy result for the prior step
-            return new Try(() -> _resolve(nil -> s.get(), () -> new Result(NOTHING, null)), new TrySetup());
+            return new Try(() -> _resolve(nil -> s.get(), () -> new Result(NOTHING, null)), new TrySetup(null));
         }
-
     }
 }

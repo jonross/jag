@@ -1,7 +1,6 @@
 package org.github.jonross.stuff4j.lang;
 
 import java.util.List;
-
 import javax.annotation.Nullable;
 
 /**
