@@ -30,7 +30,7 @@ public class Try<T>
     /** What the first step operates on, since there is no prior step */
     private final static Object NOTHING = new Object();
 
-    private Try(String description, int serial, Supplier<Result<T>> step, TrySetup setup)
+    private Try(@Nonnull String description, int serial, @Nonnull Supplier<Result<T>> step, @Nonnull TrySetup setup)
     {
         this.serial = serial;
         this.description = description != null ? description : "step " + serial;
@@ -97,7 +97,7 @@ public class Try<T>
 
     public <U,E extends Exception> Try<U> map(@Nonnull Throwing.Function<? super T, ? extends U,E> f)
     {
-        return map(null, f);
+        return map("step " + (1 + serial), f);
     }
 
     /**
@@ -105,7 +105,7 @@ public class Try<T>
      * function passed to {@link #withErrorsTo}.  The message will be <code>"Failed to " + description</code>.
      */
 
-    public <U,E extends Exception> Try<U> map(@Nullable String description, @Nonnull Throwing.Function<? super T, ? extends U,E> f)
+    public <U,E extends Exception> Try<U> map(@Nonnull String description, @Nonnull Throwing.Function<? super T, ? extends U,E> f)
     {
         // To run this step, fetch the result from prior step and apply the function
         return new Try(description, 1 + serial, () -> _buildStep(setup, f, step), setup);
@@ -181,18 +181,18 @@ public class Try<T>
 
         public <T,E extends Exception> Try<T> to(@Nonnull Throwing.Supplier<T,E> s)
         {
-            return to(null, s);
+            return to("step 1", s);
         }
 
         /**
          * @see Try#to(String, Throwing.Supplier)
          */
 
-        public <T,E extends Exception> Try<T> to(@Nullable String description, @Nonnull Throwing.Supplier<T,E> s)
+        public <T,E extends Exception> Try<T> to(@Nonnull String description, @Nonnull Throwing.Supplier<T,E> s)
         {
             // To start the chain, behave like map() but supply a dummy result for the prior step
-            return new Try(null, 1, () -> _buildStep(this, nil -> s.get(),
-                    () -> new Result(description, NOTHING, null)), this);
+            return new Try(null, 1, () -> _buildStep(this, description, nil -> s.get(),
+                    () -> new Result("step 0 -- this description is never used", NOTHING, null)), this);
         }
     }
 
@@ -202,7 +202,8 @@ public class Try<T>
      */
 
     private static <T,U,E extends Exception> Result<U>
-    _buildStep(@Nonnull TrySetup setup, @Nonnull Throwing.Function<? super T, ? extends U, E> f,
+    _buildStep(@Nonnull TrySetup setup, @Nonnull String description,
+               @Nonnull Throwing.Function<? super T, ? extends U, E> f,
                @Nonnull Supplier<Result<T>> priorStep)
     {
         Result<T> prior = priorStep.get();
@@ -213,14 +214,11 @@ public class Try<T>
             {
                 throw new NullPointerException("null result from")
             }
-            return new Result(description, )
-            return newValue != null || setup.allowNull
-                    ? new Result(newValue, null)
-                    : new Result(null, new NullPointerException("foo"));
+            return new Result(description, newValue, null);
         }
         catch (Exception e)
         {
-            return new Result(null, e);
+            return new Result(description, null, e);
         }
     }
 
@@ -232,7 +230,7 @@ public class Try<T>
 
         Result(@Nonnull String description, @Nullable T value, @Nullable Exception error)
         {
-            this.description = description != null ? description : "step 1"; // special case for setup time
+            this.description = description;
             this.value = value;
             this.error = error;
         }
