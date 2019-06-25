@@ -42,7 +42,7 @@ public class Try<T>
      * Specify a logger for errors on named steps, before the first invocation of {@link #to(String, Throwing.Supplier)}
      */
 
-    public static TrySetup withErrorsTo(@Nonnull BiConsumer<String, ? extends Exception> logger)
+    public static TrySetup withErrorsTo(@Nonnull BiConsumer<String, Throwable> logger)
     {
         return new TrySetup().withErrorsTo(logger);
     }
@@ -108,7 +108,7 @@ public class Try<T>
     public <U,E extends Exception> Try<U> map(@Nonnull String description, @Nonnull Throwing.Function<? super T, ? extends U,E> f)
     {
         // To run this step, fetch the result from prior step and apply the function
-        return new Try(description, 1 + serial, () -> _buildStep(setup, f, step), setup);
+        return new Try(description, 1 + serial, () -> _buildStep(setup, description, f, step), setup);
     }
 
     /**
@@ -143,7 +143,7 @@ public class Try<T>
 
     public final static class TrySetup
     {
-        final @Nullable BiConsumer<String,? extends Exception> logger;
+        final @Nullable BiConsumer<String,Throwable> logger;
         final boolean allowNull;
 
         private TrySetup()
@@ -151,7 +151,7 @@ public class Try<T>
             this(null, false);
         }
 
-        private TrySetup(@Nullable BiConsumer<String,? extends Exception> logger, boolean allowNull)
+        private TrySetup(@Nullable BiConsumer<String,Throwable> logger, boolean allowNull)
         {
             this.logger = logger;
             this.allowNull = allowNull;
@@ -161,7 +161,7 @@ public class Try<T>
          * @see Try#withErrorsTo(BiConsumer)
          */
 
-        public TrySetup withErrorsTo(@Nonnull BiConsumer<String,? extends Exception> logger)
+        public TrySetup withErrorsTo(@Nonnull BiConsumer<String,Throwable> logger)
         {
             return new TrySetup(logger, allowNull);
         }
@@ -202,9 +202,9 @@ public class Try<T>
      */
 
     private static <T,U,E extends Exception> Result<U>
-    _buildStep(@Nonnull TrySetup setup, @Nonnull String description,
-               @Nonnull Throwing.Function<? super T, ? extends U, E> f,
-               @Nonnull Supplier<Result<T>> priorStep)
+        _buildStep(@Nonnull TrySetup setup, @Nonnull String description,
+                   @Nonnull Throwing.Function<? super T, ? extends U, E> f,
+                   @Nonnull Supplier<Result<T>> priorStep)
     {
         Result<T> prior = priorStep.get();
         try
@@ -212,12 +212,16 @@ public class Try<T>
             U newValue = f.apply(prior.value);
             if (newValue == null && ! setup.allowNull)
             {
-                throw new NullPointerException("null result from")
+                throw new NullPointerException("null result from");
             }
             return new Result(description, newValue, null);
         }
         catch (Exception e)
         {
+            if (setup.logger != null)
+            {
+                setup.logger.accept("Failed to " + description, (Exception) e);
+            }
             return new Result(description, null, e);
         }
     }
