@@ -1,9 +1,9 @@
-package org.github.jonross.stuff4j.lang;
+package org.github.jonross.stuff4j.function;
 
 /**
- * Analogs to common JDK functional interfaces that also allow checked exceptions.  The exception parameter
- * in these types extends <code>Exception</code>, not <code>Throwable</code>, because Java code outside the
- * JDK should not catch or throw <code>Throwable</code>.
+ * Analogs to JDK functional interfaces that also allow checked exceptions.  The exception parameter in these
+ * these types extends <code>Exception</code>, not <code>Throwable</code>, because Java code outside the JDK
+ * should not catch or throw <code>Throwable</code>.
  */
 
 public class Throwing

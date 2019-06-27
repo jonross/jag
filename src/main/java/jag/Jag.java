@@ -80,6 +80,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.github.jonross.stuff4j.lang.Tuple2;
+
 import static java.lang.ProcessBuilder.Redirect.INHERIT;
 import static java.lang.ProcessBuilder.Redirect.PIPE;
 import static java.util.stream.Collectors.joining;
@@ -162,7 +164,7 @@ public class Jag {
 
     public String drain(Reader r) {
         return closing(r, __ -> {
-            return copy(r, new StringWriter()).second.toString();
+            return copy(r, new StringWriter())._2.toString();
         });
     }
 
@@ -172,7 +174,7 @@ public class Jag {
         });
     }
 
-    public <R extends Reader, W extends Writer> Pair<R, W> copy(R r, W w) {
+    public <R extends Reader, W extends Writer> Tuple2<R, W> copy(R r, W w) {
         return unchecked(() -> {
             char[] buf = new char[4096];
             while (true) {
@@ -182,7 +184,7 @@ public class Jag {
                 }
                 w.write(buf, 0, count);
             }
-            return pair(r, w);
+            return Tuple2.of(r, w);
         });
     }
 
@@ -204,7 +206,7 @@ public class Jag {
 
     public byte[] drain(InputStream in) {
         return closing(in, __ -> {
-            return copy(in, new ByteArrayOutputStream()).second.toByteArray();
+            return copy(in, new ByteArrayOutputStream())._2.toByteArray();
         });
     }
 
@@ -214,7 +216,7 @@ public class Jag {
         });
     }
 
-    public <I extends InputStream, O extends OutputStream> Pair<I, O> copy(I in, O out) {
+    public <I extends InputStream, O extends OutputStream> Tuple2<I, O> copy(I in, O out) {
         return unchecked(() -> {
             byte[] buf = new byte[4096];
             while (true) {
@@ -224,7 +226,7 @@ public class Jag {
                 }
                 out.write(buf, 0, count);
             }
-            return pair(in, out);
+            return Tuple2.of(in, out);
         });
     }
 
@@ -255,11 +257,6 @@ public class Jag {
         return unchecked(() -> url.openStream());
     }
 
-    public Path chmod(Path path, String mode) {
-        unchecked(() -> Files.setPosixFilePermissions(path, PosixFilePermissions.fromString(mode)));
-        return path;
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // help with Closeables
@@ -279,39 +276,6 @@ public class Jag {
         }
         finally {
             unchecked(() -> t.close());
-        }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // support two-valued returns
-
-    public <A, B> Pair<A, B> pair(A a, B b) {
-        return new Pair(a, b);
-    }
-
-    public final static class Pair<A,B> {
-
-        public final A first;
-        public final B second;
-
-        public Pair(A a, B b) {
-            first = a;
-            second = b;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (! (o instanceof Pair)) {
-                return false;
-            }
-            Pair<?,?> that = (Pair<?,?>) o;
-            return Objects.equals(this.first, that.first) &&
-                    Objects.equals(this.second, that.second);
-        }
-
-        @Override public int hashCode() {
-            return Objects.hash(first, second);
         }
     }
 
@@ -346,11 +310,11 @@ public class Jag {
             return this;
         }
 
-        public int status() { return _execute(false).first; }
-        public String output() { return _execute(true).second; }
-        public Pair<Integer,String> result() { return _execute(true); }
+        public int status() { return _execute(false)._1; }
+        public String output() { return _execute(true)._2; }
+        public Tuple2<Integer,String> result() { return _execute(true); }
 
-        private Pair<Integer,String> _execute(boolean wantOutput) {
+        private Tuple2<Integer,String> _execute(boolean wantOutput) {
             return unchecked(() -> {
                 Process p = new ProcessBuilder(command)
                         .redirectOutput(wantOutput ? PIPE : INHERIT)
@@ -364,7 +328,7 @@ public class Jag {
                 if (p.exitValue() != 0 && mustSucceed) {
                     die("Command failed: " + Arrays.stream(command).collect(joining(" ")));
                 }
-                return pair(p.exitValue(), stdoutReader.get() + (mergeStderr ? stderrReader.get() : ""));
+                return Tuple2.of(p.exitValue(), stdoutReader.get() + (mergeStderr ? stderrReader.get() : ""));
             });
         }
     }

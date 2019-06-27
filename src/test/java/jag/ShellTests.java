@@ -1,5 +1,6 @@
 package jag;
 
+import org.github.jonross.stuff4j.lang.Tuple2;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -21,8 +22,8 @@ public class ShellTests {
 
     @Test
     public void testOutputAndStatus() {
-        assertEquals($.shell("echo foo; echo bar").result(), $.pair(0, "foo\nbar\n"));
-        assertEquals($.shell("echo foo; echo bar; exit 3").result(), $.pair(3, "foo\nbar\n"));
+        assertEquals($.shell("echo foo; echo bar").result(), Tuple2.of(0, "foo\nbar\n"));
+        assertEquals($.shell("echo foo; echo bar; exit 3").result(), Tuple2.of(3, "foo\nbar\n"));
     }
 
     @Test
