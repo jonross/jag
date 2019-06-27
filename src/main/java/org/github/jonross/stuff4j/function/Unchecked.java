@@ -123,7 +123,7 @@ public class Unchecked
      * Convert a bi-function that can throw checked exceptions to one that cannot.
      */
 
-    public static <T,U,R,E extends Exception> BiFunction<T,U,R> function(Throwing.BiFunction<T,U,R,E> f) {
+    public static <T,U,R,E extends Exception> BiFunction<T,U,R> biFunction(Throwing.BiFunction<T,U,R,E> f) {
         return new BiFunction<>(){
             @Override
             public R apply(T t, U u) {
@@ -138,5 +138,53 @@ public class Unchecked
                 }
             }
         };
+    }
+
+    /**
+     * Call a throwing runnable from a call site that cannot throw checked exceptions.
+     */
+
+    public static <E extends Exception> void run(Throwing.Runnable<E> r) {
+        runnable(r).run();
+    }
+
+    /**
+     * Call a throwing supplier from a call site that cannot throw checked exceptions.
+     */
+
+    public static <T,E extends Exception> T get(Throwing.Supplier<T,E> s) {
+        return supplier(s).get();
+    }
+
+    /**
+     * Call a throwing consumer from a call site that cannot throw checked exceptions.
+     */
+
+    public static <T,E extends Exception> void accept(Throwing.Consumer<T,E> c, T t) {
+        consumer(c).accept(t);
+    }
+
+    /**
+     * Call a throwing bi-consumer from a call site that cannot throw checked exceptions.
+     */
+
+    public static <T,U,E extends Exception> void accept(Throwing.BiConsumer<T,U,E> c, T t, U u) {
+        biConsumer(c).accept(t, u);
+    }
+
+    /**
+     * Call a throwing function from a call site that cannot throw checked exceptions.
+     */
+
+    public static <T,R,E extends Exception> R apply(Throwing.Function<T,R,E> f, T t) {
+        return function(f).apply(t);
+    }
+
+    /**
+     * Call a throwing bi-function from a call site that cannot throw checked exceptions.
+     */
+
+    public static <T,U,R,E extends Exception> R apply(Throwing.BiFunction<T,U,R,E> f, T t, U u) {
+        return biFunction(f).apply(t, u);
     }
 }
