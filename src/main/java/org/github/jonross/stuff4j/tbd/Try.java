@@ -1,13 +1,12 @@
 package org.github.jonross.stuff4j.tbd;
 
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.github.jonross.stuff4j.lang.Throwing;
-import org.github.jonross.stuff4j.lang.Throwing.Function;
 
 /**
  * WORK IN PROGRESS
@@ -16,45 +15,18 @@ import org.github.jonross.stuff4j.lang.Throwing.Function;
 public class Try<T>
 {
     /** Logic to run in this step of the chain */
-    private final Supplier<Result<T>> step;
+    private final Function<Context,Result<T>> step;
 
-    /** Description of the logic */
-    private final String description;
-
-    /** What numbered step this is in the chain */
-    private final int serial;
-
-    /** Settings specified at the start of the chain */
-    private final TrySetup setup;
+    /** Context built during chain construction, outermost will be passed to the step function later */
+    private final Context context;
 
     /** What the first step operates on, since there is no prior step */
     private final static Object NOTHING = new Object();
 
-    private Try(@Nonnull String description, int serial, @Nonnull Supplier<Result<T>> step, @Nonnull TrySetup setup)
+    private Try(@Nonnull Context context, @Nonnull Function<Context,Result<T>> step)
     {
-        this.serial = serial;
-        this.description = description != null ? description : "step " + serial;
+        this.context = context;
         this.step = step;
-        this.setup = setup;
-    }
-
-    /**
-     * Specify a logger for errors on named steps, before the first invocation of {@link #to(String, Throwing.Supplier)}
-     */
-
-    public static TrySetup withErrorsTo(@Nonnull BiConsumer<String, Throwable> logger)
-    {
-        return new TrySetup().withErrorsTo(logger);
-    }
-
-    /**
-     * Indicate that <code>null</code> is a valid return from a step function, before the first invocation of
-     * {@link #to(Throwing.Supplier)}.
-     */
-
-    public static TrySetup allowingNull()
-    {
-        return new TrySetup().allowingNull();
     }
 
     /**
@@ -70,17 +42,8 @@ public class Try<T>
 
     public static <T,E extends Exception> Try<T> to(@Nonnull Throwing.Supplier<T,E> s)
     {
-        return new TrySetup().to(s);
-    }
-
-    /**
-     * Same as {@link #to(Throwing.Supplier)}, except that if the step throws an error, it will be logged via the
-     * function passed to {@link #withErrorsTo}.  The message will be <code>"Failed to " + description</code>.
-     */
-
-    public static <T,E extends Exception> Try<T> to(@Nullable String description, @Nonnull Throwing.Supplier<T,E> s)
-    {
-        return new TrySetup().to(description, s);
+        // To start the chain, build a step that ignores a fake prior value and just runs the supplier
+        return new Try(new Context(null), _buildStep(nil -> s.get(), nil -> new Result(NOTHING, null)));
     }
 
     /**
@@ -97,18 +60,8 @@ public class Try<T>
 
     public <U,E extends Exception> Try<U> map(@Nonnull Throwing.Function<? super T, ? extends U,E> f)
     {
-        return map("step " + (1 + serial), f);
-    }
-
-    /**
-     * Same as {@link #map(Function)}, except that if the step throws an error, it will be logged via the
-     * function passed to {@link #withErrorsTo}.  The message will be <code>"Failed to " + description</code>.
-     */
-
-    public <U,E extends Exception> Try<U> map(@Nonnull String description, @Nonnull Throwing.Function<? super T, ? extends U,E> f)
-    {
         // To run this step, fetch the result from prior step and apply the function
-        return new Try(description, 1 + serial, () -> _buildStep(setup, description, f, step), setup);
+        return new Try(context, _buildStep(f, step));
     }
 
     /**
@@ -118,7 +71,7 @@ public class Try<T>
 
     public T get()
     {
-        Result<T> result = step.get();
+        Result<T> result = step.apply(context);
         if (result.error != null)
         {
             if (result.error instanceof RuntimeException)
@@ -131,110 +84,61 @@ public class Try<T>
     }
 
     /**
-     * This builder class is the actual implementation of the similarly named static setup methods that can
-     * be called on {@link Try}.  This allows chaining of setup methods before we begin chaining computations,
-     * e.g.
-     * <pre>
-     *     Try.allowingNull()
-     *         .withErrorsTo(MYLOG::error)
-     *         .to(...
-     * </pre>
+     * Everything else in this class is boilerplate, this is the brains of the operation.  Build the Function for
+     * a given step's result that transforms the result of the prior step.
      */
 
-    public final static class TrySetup
+    private static <T,U,E extends Exception> Function<Context,Result<U>>
+        _buildStep(@Nonnull Throwing.Function<? super T, ? extends U, E> f,
+                   @Nonnull Function<Context,Result<T>> priorStep)
     {
-        final @Nullable BiConsumer<String,Throwable> logger;
-        final boolean allowNull;
-
-        private TrySetup()
+        return context ->
         {
-            this(null, false);
-        }
+            Result<T> prior = priorStep.apply(context);
+            if (prior.error != null)
+            {
+                return new Result(null, prior.error);
+            }
+            try
+            {
+                return new Result(f.apply(prior.value), null);
+            }
+            catch (Exception e)
+            {
+                if (context.logger != null)
+                {
+                    context.logger.accept(e);
+                }
+                return new Result(null, e);
+            }
+        };
+    }
 
-        private TrySetup(@Nullable BiConsumer<String,Throwable> logger, boolean allowNull)
+    /**
+     * Class to carry run context recursively to each nested step.
+     */
+
+    private static class Context
+    {
+        final Consumer<Throwable> logger;
+
+        Context(Consumer<Throwable> logger)
         {
             this.logger = logger;
-            this.allowNull = allowNull;
-        }
-
-        /**
-         * @see Try#withErrorsTo(BiConsumer)
-         */
-
-        public TrySetup withErrorsTo(@Nonnull BiConsumer<String,Throwable> logger)
-        {
-            return new TrySetup(logger, allowNull);
-        }
-
-        /**
-         * @see Try#allowingNull()
-         */
-
-        public TrySetup allowingNull()
-        {
-            return new TrySetup(logger, true);
-        }
-
-        /**
-         * @see Try#to(Throwing.Supplier)
-         */
-
-        public <T,E extends Exception> Try<T> to(@Nonnull Throwing.Supplier<T,E> s)
-        {
-            return to("step 1", s);
-        }
-
-        /**
-         * @see Try#to(String, Throwing.Supplier)
-         */
-
-        public <T,E extends Exception> Try<T> to(@Nonnull String description, @Nonnull Throwing.Supplier<T,E> s)
-        {
-            // To start the chain, behave like map() but supply a dummy result for the prior step
-            return new Try(null, 1, () -> _buildStep(this, description, nil -> s.get(),
-                    () -> new Result("step 0 -- this description is never used", NOTHING, null)), this);
         }
     }
 
     /**
-     * Everything else in this class is boilerplate, this is the brains of the operation.  Build the Supplier for
-     * a given step's result that transforms the result of the prior step.
+     * Class to carry result out of each nested step.
      */
-
-    private static <T,U,E extends Exception> Result<U>
-        _buildStep(@Nonnull TrySetup setup, @Nonnull String description,
-                   @Nonnull Throwing.Function<? super T, ? extends U, E> f,
-                   @Nonnull Supplier<Result<T>> priorStep)
-    {
-        Result<T> prior = priorStep.get();
-        try
-        {
-            U newValue = f.apply(prior.value);
-            if (newValue == null && ! setup.allowNull)
-            {
-                throw new NullPointerException("null result from");
-            }
-            return new Result(description, newValue, null);
-        }
-        catch (Exception e)
-        {
-            if (setup.logger != null)
-            {
-                setup.logger.accept("Failed to " + description, (Exception) e);
-            }
-            return new Result(description, null, e);
-        }
-    }
 
     private static class Result<T>
     {
-        @Nonnull final String description;
         @Nullable final T value;
         @Nullable final Exception error;
 
-        Result(@Nonnull String description, @Nullable T value, @Nullable Exception error)
+        Result(@Nullable T value, @Nullable Exception error)
         {
-            this.description = description;
             this.value = value;
             this.error = error;
         }
