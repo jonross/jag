@@ -23,8 +23,7 @@ public class Try<T>
     /** What the first step operates on, since there is no prior step */
     private final static Object NOTHING = new Object();
 
-    private Try(@Nonnull Context context, @Nonnull Function<Context,Result<T>> step)
-    {
+    private Try(@Nonnull Context context, @Nonnull Function<Context,Result<T>> step) {
         this.context = context;
         this.step = step;
     }
@@ -40,8 +39,7 @@ public class Try<T>
      * result / throw an exception.
      */
 
-    public static <T,E extends Exception> Try<T> to(@Nonnull Throwing.Supplier<T,E> s)
-    {
+    public static <T,E extends Exception> Try<T> to(@Nonnull Throwing.Supplier<T,E> s) {
         // To start the chain, build a step that ignores a fake prior value and just runs the supplier
         return new Try(new Context(null), _buildStep(nil -> s.get(), nil -> new Result(NOTHING, null)));
     }
@@ -58,10 +56,18 @@ public class Try<T>
      * @return Same as {@link #to(Throwing.Supplier)}
      */
 
-    public <U,E extends Exception> Try<U> map(@Nonnull Throwing.Function<? super T, ? extends U,E> f)
-    {
+    public <U,E extends Exception> Try<U> map(@Nonnull Throwing.Function<? super T, ? extends U,E> f) {
         // To run this step, fetch the result from prior step and apply the function
         return new Try(context, _buildStep(f, step));
+    }
+
+    public <U,E extends Exception> Try<U> flatMap(@Nonnull Throwing.Function<? super T, Try<? extends U>,E> f) {
+        // Same logic as map, but add an extra indirection to unwrap the nested result
+        Function<Context,Result<Try<? extends U>>> f2 = _buildStep(f, step);
+        return new Try<>(context, c -> {
+            Result<Try<? extends U>> result = f2.apply(c);
+            return result.error == null ? new Result(result.value, null) : new Result(null, result.error);
+        });
     }
 
     /**
@@ -69,13 +75,10 @@ public class Try<T>
      * any result was null and <code>allowingNull</code> was not called during setup.
      */
 
-    public T get()
-    {
+    public T get() {
         Result<T> result = step.apply(context);
-        if (result.error != null)
-        {
-            if (result.error instanceof RuntimeException)
-            {
+        if (result.error != null) {
+            if (result.error instanceof RuntimeException) {
                 throw ((RuntimeException) result.error);
             }
             throw new RuntimeException(result.error);
@@ -95,18 +98,14 @@ public class Try<T>
         return context ->
         {
             Result<T> prior = priorStep.apply(context);
-            if (prior.error != null)
-            {
+            if (prior.error != null) {
                 return new Result(null, prior.error);
             }
-            try
-            {
+            try {
                 return new Result(f.apply(prior.value), null);
             }
-            catch (Exception e)
-            {
-                if (context.logger != null)
-                {
+            catch (Exception e) {
+                if (context.logger != null) {
                     context.logger.accept(e);
                 }
                 return new Result(null, e);
@@ -122,8 +121,7 @@ public class Try<T>
     {
         final Consumer<Throwable> logger;
 
-        Context(Consumer<Throwable> logger)
-        {
+        Context(Consumer<Throwable> logger) {
             this.logger = logger;
         }
     }
@@ -137,8 +135,7 @@ public class Try<T>
         @Nullable final T value;
         @Nullable final Exception error;
 
-        Result(@Nullable T value, @Nullable Exception error)
-        {
+        Result(@Nullable T value, @Nullable Exception error) {
             this.value = value;
             this.error = error;
         }
