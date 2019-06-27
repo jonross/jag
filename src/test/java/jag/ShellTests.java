@@ -5,9 +5,9 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 
-import static jag.Jag.$;
-
 public class ShellTests {
+
+    private final Jag $ = new Jag();
 
     @Test
     public void testOutput() {

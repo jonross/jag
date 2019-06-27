@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.github.jonross.stuff4j.function.Closing;
 import org.github.jonross.stuff4j.function.Throwing;
 import org.github.jonross.stuff4j.function.Unchecked;
 import org.github.jonross.stuff4j.lang.Tuple1;
@@ -100,5 +101,17 @@ public final class Stuff4J {
     /** @see {@link Unchecked#apply} */
     public <T,U,R,E extends Exception> R apply(Throwing.BiFunction<T,U,R,E> f, T t, U u) {
         return Unchecked.apply(f, t, u);
+    }
+
+    /** @see {@link Closing#accept} */
+    public static <C extends AutoCloseable,E1 extends Exception,E2 extends Exception>
+    void accept(Throwing.Supplier<C,E1> open, Throwing.Consumer<C,E2> c) {
+        Closing.accept(open, c);
+    }
+
+    /** @see {@link Closing#apply} */
+    public static <C extends AutoCloseable,R,E1 extends Exception,E2 extends Exception>
+    R apply(Throwing.Supplier<C,E1> open, Throwing.Function<C,R,E2> f) {
+        return Closing.apply(open, f);
     }
 }

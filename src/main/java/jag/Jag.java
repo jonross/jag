@@ -41,6 +41,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -80,6 +81,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.github.jonross.stuff4j.Stuff4J;
+import org.github.jonross.stuff4j.function.Closing;
 import org.github.jonross.stuff4j.lang.Tuple2;
 
 import static java.lang.ProcessBuilder.Redirect.INHERIT;
@@ -89,7 +92,7 @@ import static java.util.stream.Collectors.toList;
 
 public class Jag {
 
-    public final static Jag $ = new Jag();
+    private final static Stuff4J $ = new Stuff4J();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -127,23 +130,6 @@ public class Jag {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // wrap any value-providing or void expression to hide checked exceptions
-
-    public <T, E extends Exception> T unchecked(ThrowingSupplier<T, E> s) {
-        try {
-            return s.get();
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public <E extends Exception> void unchecked(ThrowingRunnable<E> r) {
-        unchecked(() -> { r.run(); return null; });
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
     // help with Readers and Writers
 
     public Reader buffered(Reader r) {
@@ -159,23 +145,21 @@ public class Jag {
     }
 
     public Writer writer(File f) {
-        return unchecked(() -> new FileWriter(f));
+        return $.get(() -> new FileWriter(f));
     }
 
     public String drain(Reader r) {
-        return closing(r, __ -> {
-            return copy(r, new StringWriter())._2.toString();
-        });
+        return $.apply(() -> r, __ -> copy(r, new StringWriter())._2.toString());
     }
 
     public void emit(Writer w, String s) {
-        closing(w, __ -> {
-            unchecked(() -> w.write(s));
+        $.accept(() -> w, __ -> {
+            w.write(s);
         });
     }
 
     public <R extends Reader, W extends Writer> Tuple2<R, W> copy(R r, W w) {
-        return unchecked(() -> {
+        return $.get(() -> {
             char[] buf = new char[4096];
             while (true) {
                 int count = r.read(buf);
@@ -201,23 +185,19 @@ public class Jag {
     }
 
     public OutputStream output(File f) {
-        return unchecked(() -> new FileOutputStream(f));
+        return $.get(() -> new FileOutputStream(f));
     }
 
     public byte[] drain(InputStream in) {
-        return closing(in, __ -> {
-            return copy(in, new ByteArrayOutputStream())._2.toByteArray();
-        });
+        return $.apply(() -> in, __ -> copy(in, new ByteArrayOutputStream())._2.toByteArray());
     }
 
     public void emit(OutputStream out, byte[] b) {
-        closing(out, __ -> {
-            unchecked(() -> out.write(b));
-        });
+        $.accept(() -> out, __ -> out.write(b));
     }
 
     public <I extends InputStream, O extends OutputStream> Tuple2<I, O> copy(I in, O out) {
-        return unchecked(() -> {
+        return $.get(() -> {
             byte[] buf = new byte[4096];
             while (true) {
                 int count = in.read(buf);
@@ -246,37 +226,15 @@ public class Jag {
     }
 
     public Reader reader(File f) {
-        return unchecked(() -> new FileReader(f));
+        return $.get(() -> new FileReader(f));
     }
 
     public InputStream input(File f) {
-        return unchecked(() -> new FileInputStream(f));
+        return $.get(() -> new FileInputStream(f));
     }
 
     public InputStream input(URL url) {
-        return unchecked(() -> url.openStream());
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // help with Closeables
-
-    public <T extends Closeable> void closing(T t, Consumer<T> f) {
-        try {
-            f.accept(t);
-        }
-        finally {
-            unchecked(() -> t.close());
-        }
-    }
-
-    public <T extends Closeable,R> R closing(T t, Function<T,R> f) {
-        try {
-            return f.apply(t);
-        }
-        finally {
-            unchecked(() -> t.close());
-        }
+        return $.get(url::openStream);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +273,7 @@ public class Jag {
         public Tuple2<Integer,String> result() { return _execute(true); }
 
         private Tuple2<Integer,String> _execute(boolean wantOutput) {
-            return unchecked(() -> {
+            return $.get(() -> {
                 Process p = new ProcessBuilder(command)
                         .redirectOutput(wantOutput ? PIPE : INHERIT)
                         .redirectError(wantOutput & mergeStderr ? PIPE : INHERIT)
@@ -324,7 +282,7 @@ public class Jag {
                         executors.submit(() -> drain(reader(p.getInputStream())));
                 Future<String> stderrReader = ! mergeStderr ? null :
                         executors.submit(() -> drain(reader(p.getErrorStream())));
-                int exitValue = waitOn($.forever(), p::waitFor).get();
+                int exitValue = waitOn(forever(), p::waitFor).get();
                 if (p.exitValue() != 0 && mustSucceed) {
                     die("Command failed: " + Arrays.stream(command).collect(joining(" ")));
                 }
