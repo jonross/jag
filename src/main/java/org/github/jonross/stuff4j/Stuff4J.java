@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import org.github.jonross.stuff4j.function.Closing;
 import org.github.jonross.stuff4j.function.Throwing;
 import org.github.jonross.stuff4j.function.Unchecked;
+import org.github.jonross.stuff4j.io.Shell;
 import org.github.jonross.stuff4j.lang.Tuple1;
 import org.github.jonross.stuff4j.lang.Tuple2;
 import org.github.jonross.stuff4j.lang.Tuple3;
@@ -113,5 +114,10 @@ public final class Stuff4J {
     public static <C extends AutoCloseable,R,E1 extends Exception,E2 extends Exception>
     R apply(Throwing.Supplier<C,E1> open, Throwing.Function<C,R,E2> f) {
         return Closing.apply(open, f);
+    }
+
+    /** @see */
+    public Shell shell(String... command) {
+        return new Shell(command);
     }
 }

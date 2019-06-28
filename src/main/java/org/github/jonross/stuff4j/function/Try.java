@@ -1,12 +1,10 @@
-package org.github.jonross.stuff4j.tbd;
+package org.github.jonross.stuff4j.function;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
-import org.github.jonross.stuff4j.function.Throwing;
 
 /**
  * WORK IN PROGRESS

@@ -1,4 +1,4 @@
-package jag;
+package org.github.jonross.stuff4j;
 
 import java.io.FilterInputStream;
 import java.io.FilterReader;

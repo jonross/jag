@@ -1,13 +1,12 @@
-package jag;
+package org.github.jonross.stuff4j;
 
 import org.github.jonross.stuff4j.lang.Tuple2;
 import org.testng.annotations.Test;
 
+import static org.github.jonross.stuff4j.Stuff4J.$;
 import static org.testng.Assert.assertEquals;
 
 public class ShellTests {
-
-    private final Jag $ = new Jag();
 
     @Test
     public void testOutput() {
