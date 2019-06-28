@@ -5,7 +5,7 @@ available without fuss in Commons Lang, Guava, JOOL, et cetera.
 Most of it is geared toward reducing the awful boilerplate that arises from checked exceptions.  The
 latter are now more or less regarded as a failure.  With proper use of generics and lambdas we can
 eliminate most of them from an application, without providing an extensive library to mirror every
-method that throws.  Examples:
+method that throws.
 
 Merge lines from multiple files:
 
@@ -23,3 +23,5 @@ without custom classes:
     return Tuple2.of("foo", 2);
 
 Feel free to use.  MIT-licensed, no runtime dependencies apart from Java 9.
+
+Classes in the `.tbd` package are prototypes and subject to rapid, non-backward-compatible change.

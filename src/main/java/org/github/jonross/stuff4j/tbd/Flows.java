@@ -1,4 +1,4 @@
-package org.github.jonross.stuff4j.io;
+package org.github.jonross.stuff4j.tbd;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -47,11 +47,11 @@ public class Flows
     }
 
     public static String drain(Reader r) {
-        return $.apply(() -> r, __ -> copy(r, new StringWriter())._2.toString());
+        return $.using(() -> r, __ -> copy(r, new StringWriter())._2.toString());
     }
 
     public static void emit(Writer w, String s) {
-        $.with(() -> w, __ -> {
+        $.use(() -> w, __ -> {
             w.write(s);
         });
     }
@@ -91,7 +91,7 @@ public class Flows
     }
 
     public static byte[] drain(InputStream in) {
-        return $.apply(() -> in, __ -> copy(in, new ByteArrayOutputStream())._2.toByteArray());
+        return $.using(() -> in, __ -> copy(in, new ByteArrayOutputStream())._2.toByteArray());
     }
 
     public static <I extends InputStream, O extends OutputStream> Tuple2<I, O> copy(I in, O out) {

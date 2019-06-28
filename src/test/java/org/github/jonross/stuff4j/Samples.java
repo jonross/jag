@@ -20,7 +20,7 @@ public class Samples {
     public void paths() {
         List<Path> paths = new ArrayList<>();
         paths.stream()
-                .flatMap(path -> $.apply(Files::readAllLines, path).stream())
+                .flatMap(path -> $.using(Files::readAllLines, path).stream())
                 .collect(toList());
 
     }

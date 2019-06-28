@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import org.github.jonross.stuff4j.Utils.TestInputStream;
 import org.github.jonross.stuff4j.Utils.TestReader;
-import org.github.jonross.stuff4j.io.Flows;
+import org.github.jonross.stuff4j.tbd.Flows;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -35,9 +35,9 @@ public class IOTests {
     public void testFiles() throws IOException {
         File f = File.createTempFile("jag-temp", "txt");
         f.deleteOnExit();
-        $.with(() -> Flows.writer(f), w -> w.write("foo"));
+        $.use(() -> Flows.writer(f), w -> w.write("foo"));
         assertEquals(Flows.drain(Flows.reader(f)), "foo");
-        $.with(() -> Flows.output(f), out -> out.write("bar".getBytes()));
+        $.use(() -> Flows.output(f), out -> out.write("bar".getBytes()));
         assertEquals(Flows.drain(Flows.input(f)), "bar".getBytes());
     }
 

@@ -1,10 +1,13 @@
-package org.github.jonross.stuff4j.function;
+package org.github.jonross.stuff4j.tbd;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.github.jonross.stuff4j.function.Throwing;
+import org.github.jonross.stuff4j.function.Throwing.Supplier;
 
 /**
  * Prototype.
@@ -38,7 +41,7 @@ public class Try<T>
      * result / throw an exception.
      */
 
-    public static <T,E extends Exception> Try<T> to(@Nonnull Throwing.Supplier<T,E> s) {
+    public static <T,E extends Exception> Try<T> to(@Nonnull Supplier<T,E> s) {
         // To start the chain, build a step that ignores a fake prior value and just runs the supplier
         return new Try(new Context(null), _buildStep(nil -> s.get(), nil -> new Result(NOTHING, null)));
     }
@@ -52,11 +55,11 @@ public class Try<T>
      * @param <U> Type of this step's result.
      * @param <E> Exception type that may be thrown
      *
-     * @return Same as {@link #to(Throwing.Supplier)}
+     * @return Same as {@link #to(Supplier)}
      */
 
     public <U,E extends Exception> Try<U> map(@Nonnull Throwing.Function<? super T, ? extends U,E> f) {
-        // To run this step, fetch the result from prior step and apply the function
+        // To run this step, fetch the result from prior step and using the function
         return new Try(context, _buildStep(f, step));
     }
 

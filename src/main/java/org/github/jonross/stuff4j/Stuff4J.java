@@ -1,15 +1,12 @@
 package org.github.jonross.stuff4j;
 
-import java.time.Duration;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.github.jonross.stuff4j.function.Closing;
+import org.github.jonross.stuff4j.function.Closeables;
 import org.github.jonross.stuff4j.function.Throwing;
 import org.github.jonross.stuff4j.function.Unchecked;
 import org.github.jonross.stuff4j.io.Shell;
@@ -17,7 +14,6 @@ import org.github.jonross.stuff4j.lang.Tuple1;
 import org.github.jonross.stuff4j.lang.Tuple2;
 import org.github.jonross.stuff4j.lang.Tuple3;
 import org.github.jonross.stuff4j.lang.Tuple4;
-import org.github.jonross.stuff4j.tbd.Time;
 
 /**
  * This class provides a JQuery-like global value that you may import as a shortcut to many Stuff4J utilities.
@@ -99,25 +95,25 @@ public final class Stuff4J {
     }
 
     /** @see {@link Unchecked#apply} */
-    public <T,R,E extends Exception> R apply(Throwing.Function<T,R,E> f, T t) {
+    public <T,R,E extends Exception> R using(Throwing.Function<T,R,E> f, T t) {
         return Unchecked.apply(f, t);
     }
 
     /** @see {@link Unchecked#apply} */
-    public <T,U,R,E extends Exception> R apply(Throwing.BiFunction<T,U,R,E> f, T t, U u) {
+    public <T,U,R,E extends Exception> R using(Throwing.BiFunction<T,U,R,E> f, T t, U u) {
         return Unchecked.apply(f, t, u);
     }
 
-    /** @see {@link Closing#with} */
+    /** @see {@link Closeables#use} */
     public static <C extends AutoCloseable,E1 extends Exception,E2 extends Exception>
-    void with(Throwing.Supplier<C,E1> open, Throwing.Consumer<C,E2> c) {
-        Closing.with(open, c);
+    void use(Throwing.Supplier<C,E1> open, Throwing.Consumer<C,E2> c) {
+        Closeables.use(open, c);
     }
 
-    /** @see {@link Closing#apply} */
+    /** @see {@link Closeables#using} */
     public static <C extends AutoCloseable,R,E1 extends Exception,E2 extends Exception>
-    R apply(Throwing.Supplier<C,E1> open, Throwing.Function<C,R,E2> f) {
-        return Closing.apply(open, f);
+    R using(Throwing.Supplier<C,E1> open, Throwing.Function<C,R,E2> f) {
+        return Closeables.using(open, f);
     }
 
     /** @see {@link Shell#Shell} */

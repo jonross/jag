@@ -1,6 +1,6 @@
 package org.github.jonross.stuff4j;
 
-import org.github.jonross.stuff4j.function.Try;
+import org.github.jonross.stuff4j.tbd.Try;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
