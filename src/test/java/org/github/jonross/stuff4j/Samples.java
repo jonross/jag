@@ -5,10 +5,9 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Future;
+import java.util.function.Function;
 
-import org.github.jonross.stuff4j.function.Null;
-import org.github.jonross.stuff4j.function.Unchecked;
+import org.github.jonross.stuff4j.tbd.Nothing;
 import org.github.jonross.stuff4j.tbd.Time;
 
 import static java.util.stream.Collectors.toList;
@@ -25,6 +24,7 @@ public class Samples {
     }
 
     public void sleep() {
-        // Time.nointr(Duration.ofSeconds(2), Null.unvoid(Thread::sleep));
+        // Nope, no, no.  Thread.sleep might be just too fucking broken.
+        Time.nointr(Duration.ofMillis(1), (t, u) -> Nothing.unvoid(() -> Thread.sleep(t)));
     }
 }
