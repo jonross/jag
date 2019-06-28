@@ -35,9 +35,9 @@ public class IOTests {
     public void testFiles() throws IOException {
         File f = File.createTempFile("jag-temp", "txt");
         f.deleteOnExit();
-        $.accept(() -> Flows.writer(f), w -> w.write("foo"));
+        $.with(() -> Flows.writer(f), w -> w.write("foo"));
         assertEquals(Flows.drain(Flows.reader(f)), "foo");
-        $.accept(() -> Flows.output(f), out -> out.write("bar".getBytes()));
+        $.with(() -> Flows.output(f), out -> out.write("bar".getBytes()));
         assertEquals(Flows.drain(Flows.input(f)), "bar".getBytes());
     }
 
@@ -46,7 +46,7 @@ public class IOTests {
         assertFalse(Flows.resource("noresource.txt", getClass()).isPresent());
         assertEquals(Flows.drain(Flows.input(Flows.resource("resource.txt", getClass()).get())),
                 "This is a resource.\n".getBytes());
-        assertEquals(Flows.drain(Flows.input(Flows.resource("/jag/resource.txt", getClass()).get())),
+        assertEquals(Flows.drain(Flows.input(Flows.resource("/org/github/jonross/stuff4j/resource.txt", getClass()).get())),
                 "This is a resource.\n".getBytes());
     }
 }

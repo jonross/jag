@@ -1,8 +1,5 @@
 package org.github.jonross.stuff4j.function;
 
-import org.github.jonross.stuff4j.function.Throwing.Consumer;
-import org.github.jonross.stuff4j.function.Throwing.Supplier;
-
 /**
  * Similar to {@link Unchecked}, this invokes common functional interfaces while also automatically closing
  * an {@link AutoCloseable} resource.
@@ -16,7 +13,7 @@ public class Closing
      */
 
     public static <C extends AutoCloseable,E1 extends Exception,E2 extends Exception>
-    void accept(Throwing.Supplier<C,E1> open, Throwing.Consumer<C,E2> c) {
+    void with(Throwing.Supplier<C,E1> open, Throwing.Consumer<C,E2> c) {
         Unchecked.run(() -> {
             try (C resource = Unchecked.get(open)) {
                 c.accept(resource);
@@ -26,7 +23,7 @@ public class Closing
 
     /**
      * Run code in the context of an open resource, which automatically closes when the work finishes.
-     * To not return a value, use {@link #accept} instead.
+     * To not return a value, use {@link #with} instead.
      */
 
     public static <C extends AutoCloseable,R,E1 extends Exception,E2 extends Exception>

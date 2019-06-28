@@ -14,7 +14,12 @@ import org.github.jonross.stuff4j.function.Throwing;
 public class Time
 {
     public static <T, E extends InterruptedException>
-    Optional<T> waitFor(Duration duration, Throwing.BiFunction<Long, TimeUnit, T, E> waiter) {
+    Optional<T> nointr(Duration duration, Throwing.Function<Long, T, E> waiter) {
+        return nointr(duration, (t, u) -> waiter.apply(t));
+    }
+
+    public static <T, E extends InterruptedException>
+    Optional<T> nointr(Duration duration, Throwing.BiFunction<Long, TimeUnit, T, E> waiter) {
         long start = System.currentTimeMillis();
         long remain = duration.toMillis();
         while (remain > 0) {
@@ -28,14 +33,5 @@ public class Time
             }
         }
         return Optional.empty();
-    }
-
-    public static <T, E extends InterruptedException> Optional<T>
-    waitOn(Duration duration, Throwing.Supplier<T, E> waiter) {
-        return waitFor(duration, (t, u) -> waiter.get());
-    }
-
-    public static Duration forever() {
-        return Duration.ofDays(365 * 1000);
     }
 }

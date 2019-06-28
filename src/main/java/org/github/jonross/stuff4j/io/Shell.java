@@ -1,5 +1,6 @@
 package org.github.jonross.stuff4j.io;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.Future;
 
@@ -54,7 +55,7 @@ public final class Shell {
                     Threads.DEFAULT_EXECUTOR_SERVICE.submit(() -> Flows.drain(Flows.reader(p.getInputStream())));
             Future<String> stderrReader = ! mergeStderr ? null :
                     Threads.DEFAULT_EXECUTOR_SERVICE.submit(() -> Flows.drain(Flows.reader(p.getErrorStream())));
-            int exitValue = Time.waitOn(Time.forever(), p::waitFor).get();
+            int exitValue = Time.nointr(Duration.ofDays(365), (t, u) -> p.waitFor()).get();
             if (p.exitValue() != 0 && mustSucceed) {
                 System.err.println("Command failed: " + Arrays.stream(command).collect(joining(" ")));
                 System.exit(1);

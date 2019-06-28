@@ -1,5 +1,8 @@
 package org.github.jonross.stuff4j;
 
+import java.time.Duration;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -14,6 +17,7 @@ import org.github.jonross.stuff4j.lang.Tuple1;
 import org.github.jonross.stuff4j.lang.Tuple2;
 import org.github.jonross.stuff4j.lang.Tuple3;
 import org.github.jonross.stuff4j.lang.Tuple4;
+import org.github.jonross.stuff4j.tbd.Time;
 
 /**
  * This class provides a JQuery-like global value that you may import as a shortcut to many Stuff4J utilities.
@@ -104,10 +108,10 @@ public final class Stuff4J {
         return Unchecked.apply(f, t, u);
     }
 
-    /** @see {@link Closing#accept} */
+    /** @see {@link Closing#with} */
     public static <C extends AutoCloseable,E1 extends Exception,E2 extends Exception>
-    void accept(Throwing.Supplier<C,E1> open, Throwing.Consumer<C,E2> c) {
-        Closing.accept(open, c);
+    void with(Throwing.Supplier<C,E1> open, Throwing.Consumer<C,E2> c) {
+        Closing.with(open, c);
     }
 
     /** @see {@link Closing#apply} */
@@ -116,7 +120,7 @@ public final class Stuff4J {
         return Closing.apply(open, f);
     }
 
-    /** @see */
+    /** @see {@link Shell#Shell} */
     public Shell shell(String... command) {
         return new Shell(command);
     }

@@ -51,7 +51,7 @@ public class Flows
     }
 
     public static void emit(Writer w, String s) {
-        $.accept(() -> w, __ -> {
+        $.with(() -> w, __ -> {
             w.write(s);
         });
     }
