@@ -1,8 +1,8 @@
 
-A mashup of several Java "utility method" projects I've had over the years.
+Stuff4J is whatever code I currently find most useful for building Java apps, that is not already
+available without fuss in Commons Lang, Guava, JOOL, et cetera.
 
-Some of this is in use, some not.  The active bit is under `src/com/github/jonross/stuff4j`.
-The general goal with Stuff4J is to replace some of the annoying imperative boilerplate in
-Java with more functional idioms.
+Most of it is geared toward reducing the awful boilerplate that erupts when combining lambdas with
+checked exceptions.
 
-There are no runtime dependencies apart from Java 9.
+Feel free to use.  MIT-licensed, no runtime dependencies apart from Java 9.
