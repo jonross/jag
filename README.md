@@ -10,7 +10,16 @@ method that throws.  Examples:
 Merge lines from multiple files:
 
     paths.stream()
-            .flatMap(path -> $.apply(Files::readAllLines, path).stream())
+            .flatMap(path -> Unchecked.apply(Files::readAllLines, path).stream())
             .collect(toList());
+
+Adapt a ResultSet to consumers that don't handle SQLException:
+
+    Function<String,Object> columnGetter = Unchecked.function(col -> resultSet.getObject(col));
+
+Stuff4J also has some helpful utility types like tuples.  Specify multi-valued function outputs
+without custom classes:
+
+    return Tuple2.of("foo", 2);
 
 Feel free to use.  MIT-licensed, no runtime dependencies apart from Java 9.
