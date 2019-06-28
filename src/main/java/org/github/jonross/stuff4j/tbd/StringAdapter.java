@@ -1,4 +1,4 @@
-package org.github.jonross.stuff4j.adapt;
+package org.github.jonross.stuff4j.tbd;
 
 import java.util.Optional;
 import java.util.OptionalDouble;
