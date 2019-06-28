@@ -3,7 +3,6 @@ package org.github.jonross.stuff4j.io;
 import java.util.Arrays;
 import java.util.concurrent.Future;
 
-import jag.Jag;
 import org.github.jonross.stuff4j.lang.Tuple2;
 import org.github.jonross.stuff4j.tbd.Threads;
 import org.github.jonross.stuff4j.tbd.Time;

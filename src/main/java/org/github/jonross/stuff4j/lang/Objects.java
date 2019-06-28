@@ -4,6 +4,10 @@ import java.util.Arrays;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+/**
+ * Some useful generic object methods from e.g. Guava and Commons Lang.
+ */
+
 public class Objects
 {
     /**

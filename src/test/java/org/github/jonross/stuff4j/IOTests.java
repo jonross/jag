@@ -3,7 +3,6 @@ package org.github.jonross.stuff4j;
 import java.io.File;
 import java.io.IOException;
 
-import jag.Jag;
 import org.github.jonross.stuff4j.Utils.TestInputStream;
 import org.github.jonross.stuff4j.Utils.TestReader;
 import org.github.jonross.stuff4j.io.Flows;
@@ -16,8 +15,7 @@ import static org.testng.Assert.assertTrue;
 
 public class IOTests {
 
-    private final Jag $ = new Jag();
-    private final Stuff4J $$ = new Stuff4J();
+    private final Stuff4J $ = new Stuff4J();
 
     @Test
     public void drainReader() throws IOException {
@@ -37,9 +35,9 @@ public class IOTests {
     public void testFiles() throws IOException {
         File f = File.createTempFile("jag-temp", "txt");
         f.deleteOnExit();
-        $$.accept(() -> Flows.writer(f), w -> w.write("foo"));
+        $.accept(() -> Flows.writer(f), w -> w.write("foo"));
         assertEquals(Flows.drain(Flows.reader(f)), "foo");
-        $$.accept(() -> Flows.output(f), out -> out.write("bar".getBytes()));
+        $.accept(() -> Flows.output(f), out -> out.write("bar".getBytes()));
         assertEquals(Flows.drain(Flows.input(f)), "bar".getBytes());
     }
 

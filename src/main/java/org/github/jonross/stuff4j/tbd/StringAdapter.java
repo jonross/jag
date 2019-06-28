@@ -9,7 +9,8 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
- * WORK IN PROGRESS
+ * Prototype.
+ * Subject to change.
  *
  * <p></p>Fit a string to other data types.  Useful for converting configuration settings, command-line values,
  * servlet parameters et cetera to ints, longs, enums and more.

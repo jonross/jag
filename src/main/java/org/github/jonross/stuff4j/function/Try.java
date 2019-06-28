@@ -7,7 +7,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * WORK IN PROGRESS
+ * Prototype.
+ * Subject to change.
  */
 
 public class Try<T>
