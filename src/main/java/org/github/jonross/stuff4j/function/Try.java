@@ -1,32 +1,23 @@
-package org.github.jonross.stuff4j.tbd;
+package org.github.jonross.stuff4j.function;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.function.Supplier;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
-import org.github.jonross.stuff4j.function.Throwing;
-import org.github.jonross.stuff4j.function.Throwing.Supplier;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Prototype.
- * Subject to change.
+ * Monadic exception handling; cf Vavr, Atlassian Fugue, Cyclops-React.
  */
 
+@ParametersAreNonnullByDefault
 public class Try<T>
 {
     /** Logic to run in this step of the chain */
-    private final Function<Context,Result<T>> step;
+    private final Supplier<Result<T>> step;
 
-    /** Context built during chain construction, outermost will be passed to the step function later */
-    private final Context context;
-
-    /** What the first step operates on, since there is no prior step */
-    private final static Object NOTHING = new Object();
-
-    private Try(@Nonnull Context context, @Nonnull Function<Context,Result<T>> step) {
-        this.context = context;
+    private Try(Supplier<Result<T>> step) {
         this.step = step;
     }
 
@@ -41,9 +32,9 @@ public class Try<T>
      * result / throw an exception.
      */
 
-    public static <T,E extends Exception> Try<T> to(@Nonnull Supplier<T,E> s) {
-        // To start the chain, build a step that ignores a fake prior value and just runs the supplier
-        return new Try(new Context(null), _buildStep(nil -> s.get(), nil -> new Result(NOTHING, null)));
+    public static <T,E extends Exception> Try<T> to(Throwing.Supplier<T,E> s) {
+        // To start the chain, build a step that ignores a fake, non-null prior value and just runs the supplier
+        return new Try(_buildStep(nil -> s.get(), () -> new Result(new Object(), null)));
     }
 
     /**
@@ -55,19 +46,24 @@ public class Try<T>
      * @param <U> Type of this step's result.
      * @param <E> Exception type that may be thrown
      *
-     * @return Same as {@link #to(Supplier)}
+     * @return Same as {@link Try#to}
      */
 
-    public <U,E extends Exception> Try<U> map(@Nonnull Throwing.Function<? super T, ? extends U,E> f) {
+    public <U,E extends Exception> Try<U> map(Throwing.Function<? super T, ? extends U,E> f) {
         // To run this step, fetch the result from prior step and using the function
-        return new Try(context, _buildStep(f, step));
+        return new Try(_buildStep(f, step));
     }
 
-    public <U,E extends Exception> Try<U> flatMap(@Nonnull Throwing.Function<? super T, Try<? extends U>,E> f) {
+    /**
+     * Same as {@link #map}, but accepts a function that returns a {@link Try} and removes one level of nesting
+     * from the resut.
+     */
+
+    public <U,E extends Exception> Try<U> flatMap(Throwing.Function<? super T, Try<? extends U>,E> f) {
         // Same logic as map, but add an extra indirection to unwrap the nested result
-        Function<Context,Result<Try<? extends U>>> f2 = _buildStep(f, step);
-        return new Try<>(context, c -> {
-            Result<Try<? extends U>> result = f2.apply(c);
+        Supplier<Result<Try<? extends U>>> f2 = _buildStep(f, step);
+        return new Try<>(() -> {
+            Result<Try<? extends U>> result = f2.get();
             return result.error == null ? new Result(result.value, null) : new Result(null, result.error);
         });
     }
@@ -78,10 +74,13 @@ public class Try<T>
      */
 
     public T get() {
-        Result<T> result = step.apply(context);
+        Result<T> result = step.get();
         if (result.error != null) {
             if (result.error instanceof RuntimeException) {
                 throw ((RuntimeException) result.error);
+            }
+            if (result.error instanceof IOException) {
+                throw new UncheckedIOException((IOException) result.error);
             }
             throw new RuntimeException(result.error);
         }
@@ -93,13 +92,13 @@ public class Try<T>
      * a given step's result that transforms the result of the prior step.
      */
 
-    private static <T,U,E extends Exception> Function<Context,Result<U>>
-        _buildStep(@Nonnull Throwing.Function<? super T, ? extends U, E> f,
-                   @Nonnull Function<Context,Result<T>> priorStep)
+    private static <T,U,E extends Exception> Supplier<Result<U>>
+        _buildStep(Throwing.Function<? super T, ? extends U, E> f,
+                   Supplier<Result<T>> priorStep)
     {
-        return context ->
+        return () ->
         {
-            Result<T> prior = priorStep.apply(context);
+            Result<T> prior = priorStep.get();
             if (prior.error != null) {
                 return new Result(null, prior.error);
             }
@@ -107,25 +106,9 @@ public class Try<T>
                 return new Result(f.apply(prior.value), null);
             }
             catch (Exception e) {
-                if (context.logger != null) {
-                    context.logger.accept(e);
-                }
                 return new Result(null, e);
             }
         };
-    }
-
-    /**
-     * Class to carry run context recursively to each nested step.
-     */
-
-    private static class Context
-    {
-        final Consumer<Throwable> logger;
-
-        Context(Consumer<Throwable> logger) {
-            this.logger = logger;
-        }
     }
 
     /**

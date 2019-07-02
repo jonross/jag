@@ -10,6 +10,8 @@ import java.util.function.Supplier;
  * Convert from {@link Throwing} versions of JDK functional interfaces, which can throw checked exceptions,
  * to the JDK ones, which cannot.  These are especially useful in {@link java.util.stream.Stream} processing,
  * since most methods on <code>Stream</code> do not allow exceptions from lambdas.
+ * <p>
+ * This is a last-resort option to exceptions in streams; the preferred approach is to use {@Link Try}.
  */
 
 public class Unchecked
