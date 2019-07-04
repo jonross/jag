@@ -2,13 +2,16 @@ package org.github.jonross.stuff4j.function;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Monadic exception handling; cf Vavr, Atlassian Fugue, Cyclops-React.
+ * Monadic exception handling; cf Vavr, Atlassian Fugue, Cyclops-React.  Lazily evaluates computational steps unless
+ * method notes that it forces evaluation.
  */
 
 @ParametersAreNonnullByDefault
@@ -75,28 +78,101 @@ public class Try<T>
 
     public T get() {
         Result<T> result = step.get();
-        if (result.error != null) {
-            if (result.error instanceof RuntimeException) {
-                throw ((RuntimeException) result.error);
-            }
-            if (result.error instanceof IOException) {
-                throw new UncheckedIOException((IOException) result.error);
-            }
-            throw new RuntimeException(result.error);
+        if (result.error == null) {
+            return result.value;
         }
-        return result.value;
+        if (result.error instanceof RuntimeException) {
+            throw ((RuntimeException) result.error);
+        }
+        if (result.error instanceof IOException) {
+            throw new UncheckedIOException((IOException) result.error);
+        }
+        throw new RuntimeException(result.error);
     }
 
     /**
-     * Everything else in this class is boilerplate, this is the brains of the operation.  Build the Function for
-     * a given step's result that transforms the result of the prior step.
+     * If the chain of computations was successful, return the result, otherwise return the result of invoking
+     * the supplier.
+     */
+
+    public T orElse(Supplier<T> s) {
+        Result<T> result = step.get();
+        return result.error == null ? result.value : s.get();
+    }
+
+    /**
+     * This does the same as {@link #get}, but if the class of exception held on error doesn't match the passed
+     * class, wrap it using the function specified.
+     */
+
+    public <E extends Exception> T orThrow(Class<E> type, Function<? super Exception, ? extends E> wrap) throws E {
+        Result<T> result = step.get();
+        if (result.error == null) {
+            return result.value;
+        }
+        if (type.isAssignableFrom(result.error.getClass())) {
+            throw type.cast(result.error);
+        }
+        throw wrap.apply(result.error);
+    }
+
+    /**
+     * Returns true if the Try contains a value, false if it contains an exception.  Note: like {@link #get} this
+     * forces evaluation.
+     */
+
+    public boolean isSuccess() {
+        return step.get().error == null;
+    }
+
+    /**
+     * Returns false if the Try contains a value, true if it contains an exception.  Note: like {@link #get} this
+     * forces evaluation.
+     */
+
+    public boolean isFailure() {
+        return step.get().error != null;
+    }
+
+    /**
+     * Call a consumer to peek at the result, if the Try contains a result.
+     */
+
+    public Try<T> onSuccess(Consumer<? super T> c) {
+        return new Try<>(() -> {
+            Result<T> result = step.get();
+            if (result.error == null) {
+                c.accept(result.value);
+            }
+            return result;
+        });
+    }
+
+    /**
+     * Call a consumer to peek at the error, if the Try contains an exception.
+     */
+
+    public Try<T> onFailure(Consumer<? super Exception> c) {
+        return new Try<>(() -> {
+            Result<T> result = step.get();
+            if (result.error != null) {
+                c.accept(result.error);
+            }
+            return result;
+        });
+    }
+
+    /**
+     * This is the brains of the operation.  Build the Function for a given step's result that transforms
+     * the result of the prior step.
      */
 
     private static <T,U,E extends Exception> Supplier<Result<U>>
         _buildStep(Throwing.Function<? super T, ? extends U, E> f,
                    Supplier<Result<T>> priorStep)
     {
-        return () ->
+        // Must memoize in case e.g. caller uses isSuccess then get.
+        return Suppliers.memoize(() ->
         {
             Result<T> prior = priorStep.get();
             if (prior.error != null) {
@@ -108,7 +184,7 @@ public class Try<T>
             catch (Exception e) {
                 return new Result(null, e);
             }
-        };
+        });
     }
 
     /**

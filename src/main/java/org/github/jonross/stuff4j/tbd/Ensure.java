@@ -7,9 +7,17 @@ package org.github.jonross.stuff4j.tbd;
 
 public class Ensure {
 
-    public static void notNull(Object obj, String message) {
+    public static <T> T notNull(T obj) {
+        if (obj == null) {
+            throw new NullPointerException();
+        }
+        return obj;
+    }
+
+    public static <T> T notNull(T obj, String message) {
         if (obj == null) {
             throw new NullPointerException(message);
         }
+        return obj;
     }
 }
