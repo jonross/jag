@@ -17,6 +17,13 @@ Adapt a ResultSet to consumers that don't handle SQLException:
 
     Function<String,Object> columnGetter = Unchecked.function(col -> resultSet.getObject(col));
 
+Monadic exception handling a la Fugue, Vavr:
+
+    Try.to(() -> someThrowingFunction())
+        .map(result -> anotherThrowingFunction(result))
+        .onFailure(e -> myLog.error("Operation failed", e))
+        .orElse(() -> alternateResult);
+
 Stuff4J also has some helpful utility types like tuples.  Specify multi-valued function outputs
 without custom classes:
 
