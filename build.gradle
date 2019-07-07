@@ -1,9 +1,26 @@
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'maven-publish'
 
 repositories {
+    mavenLocal()
     mavenCentral()
-    jcenter()
+}
+
+publishing {
+    repositories {
+        maven {
+            mavenLocal()
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'org.github.jonross.stuff4j'
+            artifactId = 'stuff4j'
+            version = '0.3.0'
+        }
+    }
 }
 
 test {
