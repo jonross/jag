@@ -42,6 +42,10 @@ public class StringAdapter {
         this.mapper = mapper;
     }
 
+    public String get(String key) {
+        return _parse(key, false, null, s -> s);
+    }
+
     public int toInt(String key) {
         return _parse(key, false, null, Integer::parseInt);
     }
