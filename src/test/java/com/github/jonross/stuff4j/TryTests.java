@@ -1,11 +1,11 @@
-package org.github.jonross.stuff4j;
+package com.github.jonross.stuff4j;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.github.jonross.stuff4j.function.Throwing;
-import org.github.jonross.stuff4j.function.Try;
+import com.github.jonross.stuff4j.function.Throwing;
+import com.github.jonross.stuff4j.function.Try;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -63,7 +63,7 @@ public class TryTests
         }
         _assertThrows("I failed", B.class,
                 () -> Try.to(() -> _raise(new B("I failed"))).orThrow(A.class, A::new));
-        _assertThrows("org.github.jonross.stuff4j.TryTests$1A: I failed", B.class,
+        _assertThrows("com.github.jonross.stuff4j.TryTests$1A: I failed", B.class,
                 () -> Try.to(() -> _raise(new A("I failed"))).orThrow(B.class, B::new));
     }
 

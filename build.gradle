@@ -16,7 +16,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            groupId = 'org.github.jonross.stuff4j'
+            groupId = 'com.github.jonross.stuff4j'
             artifactId = 'stuff4j'
             version = '0.3.0'
         }

@@ -1,9 +1,9 @@
-package org.github.jonross.stuff4j.function;
+package com.github.jonross.stuff4j.function;
 
 import java.io.Serializable;
 import java.util.function.Supplier;
 
-import org.github.jonross.stuff4j.tbd.Ensure;
+import com.github.jonross.stuff4j.tbd.Ensure;
 
 /**
  * Helpers for working with {@link Supplier Suppliers}.

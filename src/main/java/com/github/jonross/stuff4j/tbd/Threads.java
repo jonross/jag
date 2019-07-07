@@ -1,4 +1,4 @@
-package org.github.jonross.stuff4j.tbd;
+package com.github.jonross.stuff4j.tbd;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

@@ -1,4 +1,4 @@
-package org.github.jonross.stuff4j.lang;
+package com.github.jonross.stuff4j.lang;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package org.github.jonross.stuff4j.function;
+package com.github.jonross.stuff4j.function;
 
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;

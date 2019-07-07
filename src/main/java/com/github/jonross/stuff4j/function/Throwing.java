@@ -1,4 +1,4 @@
-package org.github.jonross.stuff4j.function;
+package com.github.jonross.stuff4j.function;
 
 /**
  * Analogs to JDK functional interfaces that also allow checked exceptions.  The exception parameter in these

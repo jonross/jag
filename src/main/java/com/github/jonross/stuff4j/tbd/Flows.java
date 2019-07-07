@@ -1,4 +1,4 @@
-package org.github.jonross.stuff4j.tbd;
+package com.github.jonross.stuff4j.tbd;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -17,9 +17,9 @@ import java.io.Writer;
 import java.net.URL;
 import java.util.Optional;
 
-import org.github.jonross.stuff4j.lang.Tuple2;
+import com.github.jonross.stuff4j.lang.Tuple2;
 
-import static org.github.jonross.stuff4j.Stuff4J.$;
+import static com.github.jonross.stuff4j.Stuff4J.$;
 
 /**
  * Prototype.

@@ -1,9 +1,9 @@
-package org.github.jonross.stuff4j;
+package com.github.jonross.stuff4j;
 
-import org.github.jonross.stuff4j.lang.Tuple2;
+import com.github.jonross.stuff4j.lang.Tuple2;
 import org.testng.annotations.Test;
 
-import static org.github.jonross.stuff4j.Stuff4J.$;
+import static com.github.jonross.stuff4j.Stuff4J.$;
 import static org.testng.Assert.assertEquals;
 
 public class ShellTests {

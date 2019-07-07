@@ -1,4 +1,4 @@
-package org.github.jonross.stuff4j;
+package com.github.jonross.stuff4j;
 
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -6,14 +6,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.github.jonross.stuff4j.function.Closeables;
-import org.github.jonross.stuff4j.function.Throwing;
-import org.github.jonross.stuff4j.function.Unchecked;
-import org.github.jonross.stuff4j.io.Shell;
-import org.github.jonross.stuff4j.lang.Tuple1;
-import org.github.jonross.stuff4j.lang.Tuple2;
-import org.github.jonross.stuff4j.lang.Tuple3;
-import org.github.jonross.stuff4j.lang.Tuple4;
+import com.github.jonross.stuff4j.function.Closeables;
+import com.github.jonross.stuff4j.function.Throwing;
+import com.github.jonross.stuff4j.function.Unchecked;
+import com.github.jonross.stuff4j.io.Shell;
+import com.github.jonross.stuff4j.lang.Tuple1;
+import com.github.jonross.stuff4j.lang.Tuple2;
+import com.github.jonross.stuff4j.lang.Tuple3;
+import com.github.jonross.stuff4j.lang.Tuple4;
 
 /**
  * This class provides a JQuery-like global value that you may import as a shortcut to many Stuff4J utilities.

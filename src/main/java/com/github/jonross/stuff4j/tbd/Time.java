@@ -1,10 +1,10 @@
-package org.github.jonross.stuff4j.tbd;
+package com.github.jonross.stuff4j.tbd;
 
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.github.jonross.stuff4j.function.Throwing;
+import com.github.jonross.stuff4j.function.Throwing;
 
 /**
  * Prototype.

@@ -1,18 +1,18 @@
-package org.github.jonross.stuff4j.io;
+package com.github.jonross.stuff4j.io;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.Future;
 
-import org.github.jonross.stuff4j.lang.Tuple2;
-import org.github.jonross.stuff4j.tbd.Flows;
-import org.github.jonross.stuff4j.tbd.Threads;
-import org.github.jonross.stuff4j.tbd.Time;
+import com.github.jonross.stuff4j.lang.Tuple2;
+import com.github.jonross.stuff4j.tbd.Flows;
+import com.github.jonross.stuff4j.tbd.Threads;
+import com.github.jonross.stuff4j.tbd.Time;
 
 import static java.lang.ProcessBuilder.Redirect.INHERIT;
 import static java.lang.ProcessBuilder.Redirect.PIPE;
 import static java.util.stream.Collectors.joining;
-import static org.github.jonross.stuff4j.Stuff4J.$;
+import static com.github.jonross.stuff4j.Stuff4J.$;
 
 /**
  * Prototype.

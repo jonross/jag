@@ -1,12 +1,12 @@
-package org.github.jonross.stuff4j.tbd;
+package com.github.jonross.stuff4j.tbd;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.github.jonross.stuff4j.function.Throwing;
+import com.github.jonross.stuff4j.function.Throwing;
 
-import static org.github.jonross.stuff4j.Stuff4J.$;
+import static com.github.jonross.stuff4j.Stuff4J.$;
 
 /**
  * Prototype.

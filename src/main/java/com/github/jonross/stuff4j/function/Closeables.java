@@ -1,4 +1,4 @@
-package org.github.jonross.stuff4j.function;
+package com.github.jonross.stuff4j.function;
 
 /**
  * Similar to {@link Unchecked}, this invokes common functional interfaces while also automatically closing

@@ -1,11 +1,11 @@
-package org.github.jonross.stuff4j;
+package com.github.jonross.stuff4j;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.github.jonross.stuff4j.Utils.TestInputStream;
-import org.github.jonross.stuff4j.Utils.TestReader;
-import org.github.jonross.stuff4j.tbd.Flows;
+import com.github.jonross.stuff4j.Utils.TestInputStream;
+import com.github.jonross.stuff4j.Utils.TestReader;
+import com.github.jonross.stuff4j.tbd.Flows;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;

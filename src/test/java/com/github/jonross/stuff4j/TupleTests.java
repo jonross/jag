@@ -1,16 +1,16 @@
-package org.github.jonross.stuff4j;
+package com.github.jonross.stuff4j;
 
-import static org.github.jonross.stuff4j.Stuff4J.$;
+import static com.github.jonross.stuff4j.Stuff4J.$;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.github.jonross.stuff4j.lang.Tuple1;
-import org.github.jonross.stuff4j.lang.Tuple2;
-import org.github.jonross.stuff4j.lang.Tuple3;
-import org.github.jonross.stuff4j.lang.Tuple4;
+import com.github.jonross.stuff4j.lang.Tuple1;
+import com.github.jonross.stuff4j.lang.Tuple2;
+import com.github.jonross.stuff4j.lang.Tuple3;
+import com.github.jonross.stuff4j.lang.Tuple4;
 import org.testng.annotations.Test;
 
 public class TupleTests
