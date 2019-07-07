@@ -46,7 +46,7 @@ public class IOTests {
         assertFalse(Flows.resource("noresource.txt", getClass()).isPresent());
         assertEquals(Flows.drain(Flows.input(Flows.resource("resource.txt", getClass()).get())),
                 "This is a resource.\n".getBytes());
-        assertEquals(Flows.drain(Flows.input(Flows.resource("/org/github/jonross/stuff4j/resource.txt", getClass()).get())),
+        assertEquals(Flows.drain(Flows.input(Flows.resource("/com/github/jonross/stuff4j/resource.txt", getClass()).get())),
                 "This is a resource.\n".getBytes());
     }
 }
