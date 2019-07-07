@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 /**
  * The actual implementation for 3-valued tuples.
  * For details see {@link Tuple}.
+ * For a less Scala-ish version see {@link Trio}.
  */
 
 public class Tuple3<A,B,C> implements Tuple

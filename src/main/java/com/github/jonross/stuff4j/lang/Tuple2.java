@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 /**
  * The actual implementation for 2-valued tuples.
  * For details see {@link Tuple}.
+ * For a less Scala-ish version see {@link Pair}.
  */
 
 public class Tuple2<A,B> implements Tuple
