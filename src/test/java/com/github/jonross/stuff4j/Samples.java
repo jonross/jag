@@ -11,8 +11,6 @@ import java.util.function.Function;
 import com.github.jonross.stuff4j.function.Unchecked;
 import com.github.jonross.stuff4j.tbd.Nothing;
 import com.github.jonross.stuff4j.tbd.Time;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
 
 import static java.util.stream.Collectors.toList;
 import static com.github.jonross.stuff4j.Stuff4J.$;
@@ -23,7 +21,7 @@ public class Samples {
     public void paths() {
         List<Path> paths = new ArrayList<>();
         paths.stream()
-                .flatMap(path -> $.using(Files::readAllLines, path).stream())
+                .flatMap(path -> $.apply(Files::readAllLines, path).stream())
                 .collect(toList());
 
     }
