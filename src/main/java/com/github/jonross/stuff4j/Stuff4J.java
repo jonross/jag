@@ -1,9 +1,18 @@
 package com.github.jonross.stuff4j;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.Writer;
+import java.net.URL;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -129,14 +138,53 @@ public final class Stuff4J {
 
     // java.io and UncheckedIO shortcuts -------------------------------------------------------------------------------
 
+    /** @see StringReader#StringReader(String) */
+    public static Reader reader(String s) {
+        return new StringReader(s);
+    }
+
+    /** @see InputStreamReader#InputStreamReader(InputStream) */
+    public static Reader reader(InputStream s) {
+        return new InputStreamReader(s);
+    }
+
     /** @see {@link UncheckedIO#reader(File)}} */
     public FileReader reader(File file) {
         return UncheckedIO.reader(file);
     }
 
+    /** @see {@link UncheckedIO#writer(File)}} */
+    public FileWriter writer(File file) {
+        return UncheckedIO.writer(file);
+    }
+
+    /** @see java.io.ByteArrayInputStream#ByteArrayInputStream(byte[]) */
+    public static InputStream input(byte[] b) {
+        return new ByteArrayInputStream(b);
+    }
+
+    public static InputStream input(URL url) {
+        return $.get(url::openStream);
+    }
+
     /** @see {@link UncheckedIO#input(File)}} */
     public FileInputStream input(File file) {
         return UncheckedIO.input(file);
+    }
+
+    /** @see {@link UncheckedIO#output(File)}} */
+    public static OutputStream output(File file) {
+        return UncheckedIO.output(file);
+    }
+
+    /** @see {@link UncheckedIO#copy(Reader, Writer)} */
+    public static <R extends Reader, W extends Writer> Trio<R, W, Integer> copy(R r, W w) {
+        return UncheckedIO.copy(r, w);
+    }
+
+    /** @see {@link UncheckedIO#copy(InputStream, OutputStream)} */
+    public static <I extends InputStream, O extends OutputStream> Trio<I, O, Integer> copy(I in, O out) {
+        return UncheckedIO.copy(in, out);
     }
 
     // TBD if will keep these ------------------------------------------------------------------------------------------

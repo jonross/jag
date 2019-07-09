@@ -19,14 +19,14 @@ public class IOTests {
 
     @Test
     public void drainReader() throws IOException {
-        TestReader r = new TestReader(Flows.reader("foo"));
+        TestReader r = new TestReader($.reader("foo"));
         assertEquals(Flows.drain(r), "foo");
         assertTrue(r.wasClosed());
     }
 
     @Test
     public void drainInputStream() throws IOException {
-        TestInputStream in = new TestInputStream(Flows.input("foo".getBytes()));
+        TestInputStream in = new TestInputStream($.input("foo".getBytes()));
         assertEquals(Flows.drain(in), "foo".getBytes());
         assertTrue(in.wasClosed());
     }
@@ -35,18 +35,18 @@ public class IOTests {
     public void testFiles() throws IOException {
         File f = File.createTempFile("jag-temp", "txt");
         f.deleteOnExit();
-        $.use(() -> Flows.writer(f), w -> w.write("foo"));
+        $.use(() -> $.writer(f), w -> w.write("foo"));
         assertEquals(Flows.drain($.reader(f)), "foo");
-        $.use(() -> Flows.output(f), out -> out.write("bar".getBytes()));
+        $.use(() -> $.output(f), out -> out.write("bar".getBytes()));
         assertEquals(Flows.drain($.input(f)), "bar".getBytes());
     }
 
     @Test
     public void testResource() {
         assertFalse(Flows.resource("noresource.txt", getClass()).isPresent());
-        assertEquals(Flows.drain(Flows.input(Flows.resource("resource.txt", getClass()).get())),
+        assertEquals(Flows.drain($.input(Flows.resource("resource.txt", getClass()).get())),
                 "This is a resource.\n".getBytes());
-        assertEquals(Flows.drain(Flows.input(Flows.resource("/com/github/jonross/stuff4j/resource.txt", getClass()).get())),
+        assertEquals(Flows.drain($.input(Flows.resource("/com/github/jonross/stuff4j/resource.txt", getClass()).get())),
                 "This is a resource.\n".getBytes());
     }
 }

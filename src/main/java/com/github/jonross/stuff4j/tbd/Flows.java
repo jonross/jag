@@ -35,32 +35,8 @@ public class Flows
                 : Optional.ofNullable(cls.getResource(path));
     }
 
-    public static Reader reader(InputStream s) {
-        return new InputStreamReader(s);
-    }
-
-    public static Reader reader(String s) {
-        return new StringReader(s);
-    }
-
-    public static Writer writer(File f) {
-        return $.get(() -> new FileWriter(f));
-    }
-
     public static String drain(Reader r) {
         return $.apply(() -> r, __ -> UncheckedIO.copy(r, new StringWriter())._2.toString());
-    }
-
-    public static InputStream input(URL url) {
-        return $.get(url::openStream);
-    }
-
-    public static InputStream input(byte[] b) {
-        return new ByteArrayInputStream(b);
-    }
-
-    public static OutputStream output(File f) {
-        return $.get(() -> new FileOutputStream(f));
     }
 
     public static byte[] drain(InputStream in) {

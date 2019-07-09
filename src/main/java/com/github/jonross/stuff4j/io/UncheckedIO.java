@@ -2,7 +2,9 @@ package com.github.jonross.stuff4j.io;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,11 +32,27 @@ public class UncheckedIO
     }
 
     /**
+     * Same as {@link FileWriter#FileWriter(File)} but throws {@link UncheckedIOException}.
+     */
+
+    public static FileWriter writer(File file) {
+        return $.apply(FileWriter::new, file);
+    }
+
+    /**
      * Same as {@link FileInputStream#FileInputStream(File)} but throws {@link UncheckedIOException}.
      */
 
     public static FileInputStream input(File file) {
         return $.apply(FileInputStream::new, file);
+    }
+
+    /**
+     * Same as {@link FileOutputStream#FileOutputStream(File)} but throws {@link UncheckedIOException}.
+     */
+
+    public static FileOutputStream output(File file) {
+        return $.apply(FileOutputStream::new, file);
     }
 
     /**
