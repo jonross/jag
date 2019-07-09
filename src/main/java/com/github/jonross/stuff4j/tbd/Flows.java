@@ -17,6 +17,7 @@ import java.io.Writer;
 import java.net.URL;
 import java.util.Optional;
 
+import com.github.jonross.stuff4j.io.UncheckedIO;
 import com.github.jonross.stuff4j.lang.Tuple2;
 
 import static com.github.jonross.stuff4j.Stuff4J.$;
@@ -47,35 +48,7 @@ public class Flows
     }
 
     public static String drain(Reader r) {
-        return $.using(() -> r, __ -> copy(r, new StringWriter())._2.toString());
-    }
-
-    public static void emit(Writer w, String s) {
-        $.use(() -> w, __ -> {
-            w.write(s);
-        });
-    }
-
-    public static <R extends Reader, W extends Writer> Tuple2<R, W> copy(R r, W w) {
-        return $.get(() -> {
-            char[] buf = new char[4096];
-            while (true) {
-                int count = r.read(buf);
-                if (count == -1) {
-                    break;
-                }
-                w.write(buf, 0, count);
-            }
-            return Tuple2.of(r, w);
-        });
-    }
-
-    public static Reader reader(File f) {
-        return $.get(() -> new FileReader(f));
-    }
-
-    public static InputStream input(File f) {
-        return $.get(() -> new FileInputStream(f));
+        return $.apply(() -> r, __ -> UncheckedIO.copy(r, new StringWriter())._2.toString());
     }
 
     public static InputStream input(URL url) {
@@ -91,7 +64,7 @@ public class Flows
     }
 
     public static byte[] drain(InputStream in) {
-        return $.using(() -> in, __ -> copy(in, new ByteArrayOutputStream())._2.toByteArray());
+        return $.apply(() -> in, __ -> copy(in, new ByteArrayOutputStream())._2.toByteArray());
     }
 
     public static <I extends InputStream, O extends OutputStream> Tuple2<I, O> copy(I in, O out) {
