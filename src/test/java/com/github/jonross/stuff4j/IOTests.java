@@ -36,9 +36,9 @@ public class IOTests {
         File f = File.createTempFile("jag-temp", "txt");
         f.deleteOnExit();
         $.use(() -> Flows.writer(f), w -> w.write("foo"));
-        assertEquals(Flows.drain(Flows.reader(f)), "foo");
+        assertEquals(Flows.drain($.reader(f)), "foo");
         $.use(() -> Flows.output(f), out -> out.write("bar".getBytes()));
-        assertEquals(Flows.drain(Flows.input(f)), "bar".getBytes());
+        assertEquals(Flows.drain($.input(f)), "bar".getBytes());
     }
 
     @Test
