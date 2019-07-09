@@ -12,8 +12,8 @@ public class Closeables
      * To return a value, use {@link #using} instead.
      */
 
-    public static <C extends AutoCloseable,E1 extends Exception,E2 extends Exception>
-    void use(Throwing.Supplier<C,E1> open, Throwing.Consumer<C,E2> c) {
+    public static <C extends AutoCloseable,E extends Exception>
+    void use(Throwing.Supplier<C,E> open, Throwing.Consumer<C,E> c) {
         Unchecked.run(() -> {
             try (C resource = Unchecked.get(open)) {
                 c.accept(resource);
@@ -26,8 +26,8 @@ public class Closeables
      * To not return a value, use {@link #use} instead.
      */
 
-    public static <C extends AutoCloseable,R,E1 extends Exception,E2 extends Exception>
-    R using(Throwing.Supplier<C,E1> open, Throwing.Function<C,R,E2> f) {
+    public static <C extends AutoCloseable,R,E extends Exception>
+    R using(Throwing.Supplier<C,E> open, Throwing.Function<C,R,E> f) {
         return Unchecked.get(() -> {
             try (C resource = Unchecked.get(open)) {
                 return f.apply(resource);
