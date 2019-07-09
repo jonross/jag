@@ -142,14 +142,14 @@ public final class Stuff4J {
     // TBD if will keep these ------------------------------------------------------------------------------------------
 
     /** @see {@link Closeables#use} */
-    public static <C extends AutoCloseable,E1 extends Exception,E2 extends Exception>
-    void use(Throwing.Supplier<C,E1> open, Throwing.Consumer<C,E2> c) {
+    public static <C extends AutoCloseable,E extends Exception>
+    void use(Throwing.Supplier<C,E> open, Throwing.Consumer<C,E> c) {
         Closeables.use(open, c);
     }
 
     /** @see {@link Closeables#using} */
-    public static <C extends AutoCloseable,R,E1 extends Exception,E2 extends Exception>
-    R apply(Throwing.Supplier<C,E1> open, Throwing.Function<C,R,E2> f) {
+    public static <C extends AutoCloseable,R,E extends Exception>
+    R apply(Throwing.Supplier<C,E> open, Throwing.Function<C,R,E> f) {
         return Closeables.using(open, f);
     }
 
