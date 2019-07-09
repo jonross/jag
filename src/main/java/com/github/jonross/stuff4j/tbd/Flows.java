@@ -36,10 +36,10 @@ public class Flows
     }
 
     public static String drain(Reader r) {
-        return $.apply(() -> r, __ -> UncheckedIO.copy(r, new StringWriter())._2.toString());
+        return UncheckedIO.copy(r, new StringWriter())._2.toString();
     }
 
     public static byte[] drain(InputStream in) {
-        return $.apply(() -> in, __ -> UncheckedIO.copy(in, new ByteArrayOutputStream())._2.toByteArray());
+        return UncheckedIO.copy(in, new ByteArrayOutputStream())._2.toByteArray();
     }
 }

@@ -21,14 +21,14 @@ public class IOTests {
     public void drainReader() throws IOException {
         TestReader r = new TestReader($.reader("foo"));
         assertEquals(Flows.drain(r), "foo");
-        assertTrue(r.wasClosed());
+        assertFalse(r.wasClosed());
     }
 
     @Test
     public void drainInputStream() throws IOException {
         TestInputStream in = new TestInputStream($.input("foo".getBytes()));
         assertEquals(Flows.drain(in), "foo".getBytes());
-        assertTrue(in.wasClosed());
+        assertFalse(in.wasClosed());
     }
 
     @Test
