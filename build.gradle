@@ -18,7 +18,7 @@ publishing {
             from components.java
             groupId = 'com.github.jonross.stuff4j'
             artifactId = 'stuff4j'
-            version = '0.4.0'
+            version = '0.5.0'
         }
     }
 }
