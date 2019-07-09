@@ -27,7 +27,8 @@ Monadic exception handling a la Fugue, Vavr:
 Stuff4J also has some helpful utility types like tuples.  Specify multi-valued function outputs
 without custom classes:
 
-    return Tuple2.of("foo", 2);
+    return Pair.of("foo", 2);
+    return Trio.of("foo", 2, 1.0);
 
 Feel free to use.  MIT-licensed, no runtime dependencies apart from Java 9.
 
