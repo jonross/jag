@@ -1,5 +1,9 @@
 package com.github.jonross.stuff4j;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -10,6 +14,9 @@ import com.github.jonross.stuff4j.function.Closeables;
 import com.github.jonross.stuff4j.function.Throwing;
 import com.github.jonross.stuff4j.function.Unchecked;
 import com.github.jonross.stuff4j.io.Shell;
+import com.github.jonross.stuff4j.io.UncheckedIO;
+import com.github.jonross.stuff4j.lang.Pair;
+import com.github.jonross.stuff4j.lang.Trio;
 import com.github.jonross.stuff4j.lang.Tuple1;
 import com.github.jonross.stuff4j.lang.Tuple2;
 import com.github.jonross.stuff4j.lang.Tuple3;
@@ -23,6 +30,8 @@ import com.github.jonross.stuff4j.lang.Tuple4;
 public final class Stuff4J {
 
     public final static Stuff4J $ = new Stuff4J();
+
+    // Tuple shortcuts -------------------------------------------------------------------------------------------------
 
     /** @see {@link Tuple1#of} */
     public <A> Tuple1<A> tuple(A a) {
@@ -43,6 +52,18 @@ public final class Stuff4J {
     public <A,B,C,D> Tuple4<A,B,C,D> tuple(A a, B b, C c, D d) {
         return Tuple4.of(a, b, c, d);
     }
+
+    /** @see {@link Pair#of} */
+    public <A,B> Pair<A,B> pair(A a, B b) {
+        return Pair.of(a, b);
+    }
+
+    /** @see {@link Trio#of} */
+    public <A,B,C> Trio<A,B,C> trio(A a, B b, C c) {
+        return Trio.of(a, b, c);
+    }
+
+    // Unchecked adapter shortcuts -------------------------------------------------------------------------------------
 
     /** @see {@link Unchecked#runnable */
     public <E extends Exception> Runnable runnable(Throwing.Runnable<E> r) {
@@ -74,6 +95,8 @@ public final class Stuff4J {
         return Unchecked.biFunction(f);
     }
 
+    // Unchecked invoker shortcuts -------------------------------------------------------------------------------------
+
     /** @see {@link Unchecked#run */
     public <E extends Exception> void run(Throwing.Runnable<E> r) {
         Unchecked.run(r);
@@ -95,14 +118,28 @@ public final class Stuff4J {
     }
 
     /** @see {@link Unchecked#apply} */
-    public <T,R,E extends Exception> R using(Throwing.Function<T,R,E> f, T t) {
+    public <T,R,E extends Exception> R apply(Throwing.Function<T,R,E> f, T t) {
         return Unchecked.apply(f, t);
     }
 
     /** @see {@link Unchecked#apply} */
-    public <T,U,R,E extends Exception> R using(Throwing.BiFunction<T,U,R,E> f, T t, U u) {
+    public <T,U,R,E extends Exception> R apply(Throwing.BiFunction<T,U,R,E> f, T t, U u) {
         return Unchecked.apply(f, t, u);
     }
+
+    // java.io and UncheckedIO shortcuts -------------------------------------------------------------------------------
+
+    /** @see {@link UncheckedIO#reader(File)}} */
+    public FileReader reader(File file) {
+        return UncheckedIO.reader(file);
+    }
+
+    /** @see {@link UncheckedIO#input(File)}} */
+    public FileInputStream input(File file) {
+        return UncheckedIO.input(file);
+    }
+
+    // TBD if will keep these ------------------------------------------------------------------------------------------
 
     /** @see {@link Closeables#use} */
     public static <C extends AutoCloseable,E1 extends Exception,E2 extends Exception>
@@ -112,7 +149,7 @@ public final class Stuff4J {
 
     /** @see {@link Closeables#using} */
     public static <C extends AutoCloseable,R,E1 extends Exception,E2 extends Exception>
-    R using(Throwing.Supplier<C,E1> open, Throwing.Function<C,R,E2> f) {
+    R apply(Throwing.Supplier<C,E1> open, Throwing.Function<C,R,E2> f) {
         return Closeables.using(open, f);
     }
 
