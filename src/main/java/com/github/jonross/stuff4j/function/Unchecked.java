@@ -1,5 +1,7 @@
 package com.github.jonross.stuff4j.function;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -17,7 +19,23 @@ import java.util.function.Supplier;
 public class Unchecked
 {
     /**
-     * Convert a runnable that can throw checked exceptions to one that cannot.
+     * All Stuff4J conversions of checked exceptions to unchecked go through this method.  A {@link RuntimeException}
+     * is returned as-is.  An {@link IOException} is wrapped in {@link java.io.UncheckedIOException}.  All other
+     * checked exceptions are wrapped in {@link RuntimeException}.
+     */
+
+    public static RuntimeException wrap(Exception e) {
+        if (e instanceof RuntimeException) {
+            return (RuntimeException) e;
+        }
+        if (e instanceof IOException) {
+            return new UncheckedIOException((IOException) e);
+        }
+        return new RuntimeException(e);
+    }
+
+    /**
+     * Convert a runnable that throws checked exceptions to one that wraps hhem using {@link #wrap}.
      */
 
     public static <E extends Exception> Runnable runnable(Throwing.Runnable<E> r) {
@@ -27,18 +45,15 @@ public class Unchecked
                 try {
                     r.run();
                 }
-                catch (RuntimeException e) {
-                    throw e;
-                }
                 catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw wrap(e);
                 }
             }
         };
     }
 
     /**
-     * Convert a supplier that can throw checked exceptions to one that cannot.
+     * Convert a supplier that throws checked exceptions to one that wraps hhem using {@link #wrap}.
      */
 
     public static <T,E extends Exception> Supplier<T> supplier(Throwing.Supplier<T,E> s) {
@@ -48,18 +63,15 @@ public class Unchecked
                 try {
                     return s.get();
                 }
-                catch (RuntimeException e) {
-                    throw e;
-                }
                 catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw wrap(e);
                 }
             }
         };
     }
 
     /**
-     * Convert a consumer that can throw checked exceptions to one that cannot.
+     * Convert a consumer that throws checked exceptions to one that wraps hhem using {@link #wrap}.
      */
 
     public static <T,E extends Exception> Consumer<T> consumer(Throwing.Consumer<T,E> c) {
@@ -69,18 +81,15 @@ public class Unchecked
                 try {
                     c.accept(t);
                 }
-                catch (RuntimeException e) {
-                    throw e;
-                }
                 catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw wrap(e);
                 }
             }
         };
     }
 
     /**
-     * Convert a bi-consumer that can throw checked exceptions to one that cannot.
+     * Convert a bi-consumer that throws checked exceptions to one that wraps hhem using {@link #wrap}.
      */
 
     public static <T,U,E extends Exception> BiConsumer<T,U> biConsumer(Throwing.BiConsumer<T,U,E> c) {
@@ -90,18 +99,15 @@ public class Unchecked
                 try {
                     c.accept(t, u);
                 }
-                catch (RuntimeException e) {
-                    throw e;
-                }
                 catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw wrap(e);
                 }
             }
         };
     }
 
     /**
-     * Convert a function that can throw checked exceptions to one that cannot.
+     * Convert a function that throws checked exceptions to one that wraps hhem using {@link #wrap}.
      */
 
     public static <T,R,E extends Exception> Function<T,R> function(Throwing.Function<T,R,E> f) {
@@ -111,18 +117,15 @@ public class Unchecked
                 try {
                     return f.apply(t);
                 }
-                catch (RuntimeException e) {
-                    throw e;
-                }
                 catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw wrap(e);
                 }
             }
         };
     }
 
     /**
-     * Convert a bi-function that can throw checked exceptions to one that cannot.
+     * Convert a bi-function that throws checked exceptions to one that wraps hhem using {@link #wrap}.
      */
 
     public static <T,U,R,E extends Exception> BiFunction<T,U,R> biFunction(Throwing.BiFunction<T,U,R,E> f) {
@@ -132,11 +135,8 @@ public class Unchecked
                 try {
                     return f.apply(t, u);
                 }
-                catch (RuntimeException e) {
-                    throw e;
-                }
                 catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw wrap(e);
                 }
             }
         };
