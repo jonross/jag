@@ -187,6 +187,16 @@ public final class Stuff4J {
         return UncheckedIO.copy(in, out);
     }
 
+    /** @see {@link UncheckedIO#drain(Reader)} */
+    public static String drain(Reader r) {
+        return UncheckedIO.drain(r);
+    }
+
+    /** @see {@link UncheckedIO#drain(InputStream)} */
+    public static byte[] drain(InputStream in) {
+        return UncheckedIO.drain(in);
+    }
+
     // TBD if will keep these ------------------------------------------------------------------------------------------
 
     /** @see {@link Closeables#use} */

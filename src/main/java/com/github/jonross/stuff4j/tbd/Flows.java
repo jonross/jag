@@ -34,12 +34,4 @@ public class Flows
                 ? Optional.ofNullable(cls.getClassLoader().getResource(path.substring(1)))
                 : Optional.ofNullable(cls.getResource(path));
     }
-
-    public static String drain(Reader r) {
-        return UncheckedIO.copy(r, new StringWriter())._2.toString();
-    }
-
-    public static byte[] drain(InputStream in) {
-        return UncheckedIO.copy(in, new ByteArrayOutputStream())._2.toByteArray();
-    }
 }

@@ -1,5 +1,6 @@
 package com.github.jonross.stuff4j.io;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 
@@ -53,6 +55,22 @@ public class UncheckedIO
 
     public static FileOutputStream output(File file) {
         return $.apply(FileOutputStream::new, file);
+    }
+
+    /**
+     * Completely consume a {@link Reader} and return its contents as a string.
+     */
+
+    public static String drain(Reader r) {
+        return UncheckedIO.copy(r, new StringWriter())._2.toString();
+    }
+
+    /**
+     * Completely consume an {@link InputStream} and return its contents as a string.
+     */
+
+    public static byte[] drain(InputStream in) {
+        return UncheckedIO.copy(in, new ByteArrayOutputStream())._2.toByteArray();
     }
 
     /**

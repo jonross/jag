@@ -53,9 +53,9 @@ public final class Shell {
                     .redirectError(wantOutput & mergeStderr ? PIPE : INHERIT)
                     .start();
             Future<String> stdoutReader =
-                    Threads.DEFAULT_EXECUTOR_SERVICE.submit(() -> Flows.drain($.reader(p.getInputStream())));
+                    Threads.DEFAULT_EXECUTOR_SERVICE.submit(() -> $.drain($.reader(p.getInputStream())));
             Future<String> stderrReader = ! mergeStderr ? null :
-                    Threads.DEFAULT_EXECUTOR_SERVICE.submit(() -> Flows.drain($.reader(p.getErrorStream())));
+                    Threads.DEFAULT_EXECUTOR_SERVICE.submit(() -> $.drain($.reader(p.getErrorStream())));
             int exitValue = Time.nointr(Duration.ofDays(365), (t, u) -> p.waitFor()).get();
             if (p.exitValue() != 0 && mustSucceed) {
                 System.err.println("Command failed: " + Arrays.stream(command).collect(joining(" ")));
