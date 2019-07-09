@@ -64,20 +64,6 @@ public class Flows
     }
 
     public static byte[] drain(InputStream in) {
-        return $.apply(() -> in, __ -> copy(in, new ByteArrayOutputStream())._2.toByteArray());
-    }
-
-    public static <I extends InputStream, O extends OutputStream> Tuple2<I, O> copy(I in, O out) {
-        return $.get(() -> {
-            byte[] buf = new byte[4096];
-            while (true) {
-                int count = in.read(buf);
-                if (count == -1) {
-                    break;
-                }
-                out.write(buf, 0, count);
-            }
-            return Tuple2.of(in, out);
-        });
+        return $.apply(() -> in, __ -> UncheckedIO.copy(in, new ByteArrayOutputStream())._2.toByteArray());
     }
 }

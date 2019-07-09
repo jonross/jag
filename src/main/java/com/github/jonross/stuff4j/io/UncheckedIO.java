@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
-import java.io.StringReader;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 
-import com.github.jonross.stuff4j.function.Throwing;
 import com.github.jonross.stuff4j.lang.Trio;
 
 import static com.github.jonross.stuff4j.Stuff4J.$;
@@ -21,21 +21,29 @@ import static com.github.jonross.stuff4j.Stuff4J.$;
 
 public class UncheckedIO
 {
+    /**
+     * Same as {@link FileReader#FileReader(File)} but throws {@link UncheckedIOException}.
+     */
+
     public static FileReader reader(File file) {
-        return _get(() -> new FileReader(file));
+        return $.apply(FileReader::new, file);
     }
 
+    /**
+     * Same as {@link FileInputStream#FileInputStream(File)} but throws {@link UncheckedIOException}.
+     */
+
     public static FileInputStream input(File file) {
-        return _get(() -> new FileInputStream(file));
+        return $.apply(FileInputStream::new, file);
     }
 
     /**
      * Copy a {@link Reader} to a {@link Writer}.
-     * @return A {@link} Trio of the reader, writer, and count of chars copied.
+     * @return A {@link} Tuple3 of the reader, writer, and count of chars copied.
      */
 
     public static <R extends Reader, W extends Writer> Trio<R, W, Integer> copy(R r, W w) {
-        return _get(() -> {
+        return $.get(() -> {
             char[] buf = new char[4096];
             int copied = 0;
             while (true) {
@@ -50,12 +58,24 @@ public class UncheckedIO
         });
     }
 
-    private static <T,E extends IOException> T _get(Throwing.Supplier<T,E> s) {
-        try {
-            return s.get();
-        }
-        catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+    /**
+     * Copy an {@link InputStream} to an {@link OutputStream}.
+     * @return A {@link} Tuple3 of the input, output, and count of bytes copied.
+     */
+
+    public static <I extends InputStream, O extends OutputStream> Trio<I, O, Integer> copy(I in, O out) {
+        return $.get(() -> {
+            byte[] buf = new byte[4096];
+            int copied = 0;
+            while (true) {
+                int count = in.read(buf);
+                if (count == -1) {
+                    break;
+                }
+                out.write(buf, 0, count);
+                copied += count;
+            }
+            return Trio.of(in, out, copied);
+        });
     }
 }
