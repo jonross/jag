@@ -1,6 +1,7 @@
 package com.github.jonross.stuff4j.lang;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -51,7 +52,7 @@ public class Tuple2<A,B> implements Tuple
     
     @Override
     public int hashCode() {
-        return Objects.hashCode(_1, _2);
+        return Objects.hash(_1, _2);
     }
 
     /** @see Tuple#equals(Object) */
@@ -62,7 +63,7 @@ public class Tuple2<A,B> implements Tuple
             return false;
         }
         Tuple2<?,?> that = (Tuple2<?,?>) o;
-        return Objects.equal(this._1, that._1)
-            && Objects.equal(this._2, that._2);
+        return Objects.equals(this._1, that._1)
+            && Objects.equals(this._2, that._2);
     }
 }
