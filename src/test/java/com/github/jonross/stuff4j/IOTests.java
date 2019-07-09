@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import com.github.jonross.stuff4j.Utils.TestInputStream;
 import com.github.jonross.stuff4j.Utils.TestReader;
-import com.github.jonross.stuff4j.tbd.Flows;
+import com.github.jonross.stuff4j.io.Resources;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -41,10 +41,11 @@ public class IOTests {
 
     @Test
     public void testResource() {
-        assertFalse(Flows.resource("noresource.txt", getClass()).isPresent());
-        assertEquals($.drain($.input(Flows.resource("resource.txt", getClass()).get())),
+        var r = Resources.relativeTo(getClass());
+        assertFalse(r.find("noresource.txt").isPresent());
+        assertEquals($.drain(r.open("resource.txt")),
                 "This is a resource.\n".getBytes());
-        assertEquals($.drain($.input(Flows.resource("/com/github/jonross/stuff4j/resource.txt", getClass()).get())),
+        assertEquals($.drain(r.open("/com/github/jonross/stuff4j/resource.txt")),
                 "This is a resource.\n".getBytes());
     }
 }

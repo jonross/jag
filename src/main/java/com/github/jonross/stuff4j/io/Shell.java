@@ -4,15 +4,14 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.Future;
 
+import com.github.jonross.stuff4j.function.Unchecked;
 import com.github.jonross.stuff4j.lang.Tuple2;
-import com.github.jonross.stuff4j.tbd.Flows;
 import com.github.jonross.stuff4j.tbd.Threads;
 import com.github.jonross.stuff4j.tbd.Time;
 
 import static java.lang.ProcessBuilder.Redirect.INHERIT;
 import static java.lang.ProcessBuilder.Redirect.PIPE;
 import static java.util.stream.Collectors.joining;
-import static com.github.jonross.stuff4j.Stuff4J.$;
 
 /**
  * Prototype.
@@ -47,15 +46,15 @@ public final class Shell {
     public Tuple2<Integer,String> result() { return _execute(true); }
 
     private Tuple2<Integer,String> _execute(boolean wantOutput) {
-        return $.get(() -> {
+        return Unchecked.get(() -> {
             Process p = new ProcessBuilder(command)
                     .redirectOutput(wantOutput ? PIPE : INHERIT)
                     .redirectError(wantOutput & mergeStderr ? PIPE : INHERIT)
                     .start();
             Future<String> stdoutReader =
-                    Threads.DEFAULT_EXECUTOR_SERVICE.submit(() -> $.drain($.reader(p.getInputStream())));
+                    Threads.DEFAULT_EXECUTOR_SERVICE.submit(() -> new String(UncheckedIO.drain(p.getInputStream())));
             Future<String> stderrReader = ! mergeStderr ? null :
-                    Threads.DEFAULT_EXECUTOR_SERVICE.submit(() -> $.drain($.reader(p.getErrorStream())));
+                    Threads.DEFAULT_EXECUTOR_SERVICE.submit(() -> new String(UncheckedIO.drain(p.getErrorStream())));
             int exitValue = Time.nointr(Duration.ofDays(365), (t, u) -> p.waitFor()).get();
             if (p.exitValue() != 0 && mustSucceed) {
                 System.err.println("Command failed: " + Arrays.stream(command).collect(joining(" ")));

@@ -14,9 +14,8 @@ import java.io.StringWriter;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 
+import com.github.jonross.stuff4j.function.Unchecked;
 import com.github.jonross.stuff4j.lang.Trio;
-
-import static com.github.jonross.stuff4j.Stuff4J.$;
 
 /**
  * Wraps many common java.io operations that throw {@link IOException} to instead throw
@@ -30,7 +29,7 @@ public class UncheckedIO
      */
 
     public static FileReader reader(File file) {
-        return $.apply(FileReader::new, file);
+        return Unchecked.apply(FileReader::new, file);
     }
 
     /**
@@ -38,7 +37,7 @@ public class UncheckedIO
      */
 
     public static FileWriter writer(File file) {
-        return $.apply(FileWriter::new, file);
+        return Unchecked.apply(FileWriter::new, file);
     }
 
     /**
@@ -46,7 +45,7 @@ public class UncheckedIO
      */
 
     public static FileInputStream input(File file) {
-        return $.apply(FileInputStream::new, file);
+        return Unchecked.apply(FileInputStream::new, file);
     }
 
     /**
@@ -54,7 +53,7 @@ public class UncheckedIO
      */
 
     public static FileOutputStream output(File file) {
-        return $.apply(FileOutputStream::new, file);
+        return Unchecked.apply(FileOutputStream::new, file);
     }
 
     /**
@@ -79,7 +78,7 @@ public class UncheckedIO
      */
 
     public static <R extends Reader, W extends Writer> Trio<R, W, Integer> copy(R r, W w) {
-        return $.get(() -> {
+        return Unchecked.get(() -> {
             char[] buf = new char[4096];
             int copied = 0;
             while (true) {
@@ -100,7 +99,7 @@ public class UncheckedIO
      */
 
     public static <I extends InputStream, O extends OutputStream> Trio<I, O, Integer> copy(I in, O out) {
-        return $.get(() -> {
+        return Unchecked.get(() -> {
             byte[] buf = new byte[4096];
             int copied = 0;
             while (true) {

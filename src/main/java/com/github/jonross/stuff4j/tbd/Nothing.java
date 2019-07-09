@@ -5,8 +5,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.github.jonross.stuff4j.function.Throwing;
-
-import static com.github.jonross.stuff4j.Stuff4J.$;
+import com.github.jonross.stuff4j.function.Unchecked;
 
 /**
  * Prototype.
@@ -35,14 +34,14 @@ public final class Nothing
 
     public static <T,E extends Exception> Supplier<Nothing> unvoid(Throwing.Runnable<E> r) {
         return () -> {
-            $.run(r);
+            Unchecked.run(r);
             return NOTHING;
         };
     }
 
     public static <T,E extends Exception> Function<T, Nothing> unvoid(Throwing.Consumer<T,E> c) {
         return t -> {
-            $.accept(c, t);
+            Unchecked.accept(c, t);
             return NOTHING;
         };
     }
