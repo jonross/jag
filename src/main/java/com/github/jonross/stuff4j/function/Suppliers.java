@@ -1,9 +1,8 @@
 package com.github.jonross.stuff4j.function;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.function.Supplier;
-
-import com.github.jonross.stuff4j.tbd.Ensure;
 
 /**
  * Helpers for working with {@link Supplier Suppliers}.
@@ -29,7 +28,7 @@ public class Suppliers
 
     public static <T> Supplier<T> memoize(Supplier<T> delegate) {
         return (Supplier)(delegate instanceof Suppliers.MemoizingSupplier ? delegate :
-                new Suppliers.MemoizingSupplier((Supplier) Ensure.notNull(delegate)));
+                new Suppliers.MemoizingSupplier((Supplier) Objects.requireNonNull(delegate)));
     }
 
     static class MemoizingSupplier<T> implements Supplier<T>, Serializable {
