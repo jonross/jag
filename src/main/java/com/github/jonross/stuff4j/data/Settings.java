@@ -42,7 +42,7 @@ public class Settings
         return new SettingsBuilder.Flat(getter);
     }
 
-    public static SettingsBuilder.Nested flat(Map<String,?> map, String keySeparator) {
+    public static SettingsBuilder.Nested nested(Map<String,?> map, String keySeparator) {
         return new SettingsBuilder.Nested(map, keySeparator);
     }
 
@@ -79,14 +79,14 @@ public class Settings
     }
 
     public <T extends Enum<T>> T getEnum(String key, Class<T> enumType) {
-        return _parse(key, Enum.class, value -> Enum.valueOf(enumType, value), false, null);
+        return _parse(key, enumType, value -> Enum.valueOf(enumType, value), false, null);
     }
 
     public <T extends Enum<T>> T getEnum(String key, Class<T> enumType, T defaultValue) {
-        return _parse(key, Enum.class, value -> Enum.valueOf(enumType, value), true, defaultValue);
+        return _parse(key, enumType, value -> Enum.valueOf(enumType, value), true, defaultValue);
     }
 
-    private <T> T _parse(String key, Class<?> resultClass, Function<String,T> parser,
+    private <T> T _parse(String key, Class<T> resultClass, Function<String,T> parser,
                          boolean hasDefault, T defaultValue) {
         Object value = getOne.apply(key);
         if (value == null) {
@@ -94,6 +94,9 @@ public class Settings
                 return defaultValue;
             }
             throw new IllegalArgumentException("No value for key " + key);
+        }
+        if (value.getClass() == resultClass) {
+            return resultClass.cast(value);
         }
         return parser.apply(value.toString());
     }

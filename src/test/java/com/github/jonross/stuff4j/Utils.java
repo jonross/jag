@@ -5,6 +5,8 @@ import java.io.FilterReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import com.github.jonross.stuff4j.function.Throwing;
@@ -53,5 +55,13 @@ class Utils {
             assertTrue(Pattern.compile(message).matcher(e.getMessage()).matches(),
                     "Expected message to match '" + message + "' but got " + e.getMessage());
         }
+    }
+
+    static Map<String,Object> map(Object... args) {
+        Map<String,Object> map = new HashMap<>();
+        for (int i = 0; i < args.length; i += 2) {
+            map.put(args[0].toString(), args[1]);
+        }
+        return map;
     }
 }

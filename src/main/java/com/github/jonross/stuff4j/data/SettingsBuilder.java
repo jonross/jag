@@ -3,6 +3,7 @@ package com.github.jonross.stuff4j.data;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -20,6 +21,8 @@ public abstract class SettingsBuilder<T extends SettingsBuilder<T>>
     SettingsBuilder(String valueSeparator) {
         this.valueSeparator = requireNonNull(valueSeparator);
     }
+
+    public abstract Settings build();
 
     /** Enable subclass covariance on base class method return types */
     protected abstract T getThis();
@@ -77,9 +80,10 @@ public abstract class SettingsBuilder<T extends SettingsBuilder<T>>
         }
 
         public Settings build() {
+            var pattern = Pattern.compile(Pattern.quote(keySeparator));
             return new Settings(s -> {
                 Object node = map;
-                String[] parts = s.split(keySeparator);
+                String[] parts = pattern.split(s);
                 if (parts.length > 1) {
                     for (int i = 0; i < parts.length - 1; i++) {
                         node = ((Map<String,?>) node).get(parts[i]);
