@@ -6,8 +6,10 @@ package com.github.jonross.stuff4j.function;
  * should not catch or throw <code>Throwable</code>.
  */
 
-public class Throwing
+public final class Throwing
 {
+    private Throwing() {/* no instances */}
+
     /**
      * A version of {@link java.lang.Runnable} that allows a checked exception to be thrown.
      */

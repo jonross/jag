@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.github.jonross.stuff4j.function.Closeables;
+import com.github.jonross.stuff4j.io.Closeables;
 import com.github.jonross.stuff4j.function.Throwing;
 import com.github.jonross.stuff4j.function.Unchecked;
 import com.github.jonross.stuff4j.tbd.Shell;

@@ -1,4 +1,9 @@
-package com.github.jonross.stuff4j.function;
+package com.github.jonross.stuff4j.io;
+
+import com.github.jonross.stuff4j.function.Throwing.Consumer;
+import com.github.jonross.stuff4j.function.Throwing.Function;
+import com.github.jonross.stuff4j.function.Throwing.Supplier;
+import com.github.jonross.stuff4j.function.Unchecked;
 
 /**
  * Similar to {@link Unchecked}, this invokes common functional interfaces while also automatically closing
@@ -13,7 +18,7 @@ public class Closeables
      */
 
     public static <C extends AutoCloseable,E extends Exception>
-    void use(Throwing.Supplier<C,E> open, Throwing.Consumer<C,E> c) {
+    void use(Supplier<C,E> open, Consumer<C,E> c) {
         Unchecked.run(() -> {
             try (C resource = Unchecked.get(open)) {
                 c.accept(resource);
@@ -27,7 +32,7 @@ public class Closeables
      */
 
     public static <C extends AutoCloseable,R,E extends Exception>
-    R using(Throwing.Supplier<C,E> open, Throwing.Function<C,R,E> f) {
+    R using(Supplier<C,E> open, Function<C,R,E> f) {
         return Unchecked.get(() -> {
             try (C resource = Unchecked.get(open)) {
                 return f.apply(resource);
