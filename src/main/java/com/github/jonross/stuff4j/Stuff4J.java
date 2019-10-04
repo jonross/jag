@@ -138,12 +138,12 @@ public final class Stuff4J {
     // java.io and UncheckedIO shortcuts -------------------------------------------------------------------------------
 
     /** @see StringReader#StringReader(String) */
-    public static Reader reader(String s) {
+    public Reader reader(String s) {
         return new StringReader(s);
     }
 
     /** @see InputStreamReader#InputStreamReader(InputStream) */
-    public static Reader reader(InputStream s) {
+    public Reader reader(InputStream s) {
         return new InputStreamReader(s);
     }
 
@@ -158,12 +158,12 @@ public final class Stuff4J {
     }
 
     /** @see java.io.ByteArrayInputStream#ByteArrayInputStream(byte[]) */
-    public static InputStream input(byte[] b) {
+    public InputStream input(byte[] b) {
         return new ByteArrayInputStream(b);
     }
 
-    public static InputStream input(URL url) {
-        return $.get(url::openStream);
+    public InputStream input(URL url) {
+        return get(url::openStream);
     }
 
     /** @see {@link UncheckedIO#input(File)}} */
@@ -172,40 +172,40 @@ public final class Stuff4J {
     }
 
     /** @see {@link UncheckedIO#output(File)}} */
-    public static OutputStream output(File file) {
+    public OutputStream output(File file) {
         return UncheckedIO.output(file);
     }
 
     /** @see {@link UncheckedIO#copy(Reader, Writer)} */
-    public static <R extends Reader, W extends Writer> Trio<R, W, Integer> copy(R r, W w) {
+    public <R extends Reader, W extends Writer> Trio<R, W, Integer> copy(R r, W w) {
         return UncheckedIO.copy(r, w);
     }
 
     /** @see {@link UncheckedIO#copy(InputStream, OutputStream)} */
-    public static <I extends InputStream, O extends OutputStream> Trio<I, O, Integer> copy(I in, O out) {
+    public <I extends InputStream, O extends OutputStream> Trio<I, O, Integer> copy(I in, O out) {
         return UncheckedIO.copy(in, out);
     }
 
     /** @see {@link UncheckedIO#drain(Reader)} */
-    public static String drain(Reader r) {
+    public String drain(Reader r) {
         return UncheckedIO.drain(r);
     }
 
     /** @see {@link UncheckedIO#drain(InputStream)} */
-    public static byte[] drain(InputStream in) {
+    public byte[] drain(InputStream in) {
         return UncheckedIO.drain(in);
     }
 
     // TBD if will keep these ------------------------------------------------------------------------------------------
 
     /** @see {@link Closeables#use} */
-    public static <C extends AutoCloseable,E extends Exception>
+    public <C extends AutoCloseable,E extends Exception>
     void use(Throwing.Supplier<C,E> open, Throwing.Consumer<C,E> c) {
         Closeables.use(open, c);
     }
 
     /** @see {@link Closeables#using} */
-    public static <C extends AutoCloseable,R,E extends Exception>
+    public <C extends AutoCloseable,R,E extends Exception>
     R apply(Throwing.Supplier<C,E> open, Throwing.Function<C,R,E> f) {
         return Closeables.using(open, f);
     }

@@ -81,13 +81,7 @@ public class Try<T>
         if (result.error == null) {
             return result.value;
         }
-        if (result.error instanceof RuntimeException) {
-            throw ((RuntimeException) result.error);
-        }
-        if (result.error instanceof IOException) {
-            throw new UncheckedIOException((IOException) result.error);
-        }
-        throw new RuntimeException(result.error);
+        throw Unchecked.wrap(result.error);
     }
 
     /**

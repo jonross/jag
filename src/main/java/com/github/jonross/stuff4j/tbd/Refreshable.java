@@ -4,12 +4,11 @@ import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.github.jonross.stuff4j.function.Throwing;
-
-import static com.github.jonross.stuff4j.function.Throwables.raise;
 
 public class Refreshable<T, E extends Exception> implements Supplier<T>
 {
@@ -17,8 +16,8 @@ public class Refreshable<T, E extends Exception> implements Supplier<T>
     private Throwing.Supplier<T,? extends Exception> supplier;
     private Consumer<Exception> errorCallback;
 
-    public static Builder every(Duration interval) {
-        return new Builder<>(interval, () -> raise(new IllegalStateException("Refreshable is empty")), null);
+    public static <T,E extends Exception> Builder<T,E> every(Duration interval, Throwing.Supplier<T,E> supplier) {
+        return new Builder<>(interval, supplier, null);
     }
 
     public T get() {
@@ -34,6 +33,7 @@ public class Refreshable<T, E extends Exception> implements Supplier<T>
     private Refreshable(T initialValue, Throwing.Supplier<T,E> supplier,
                         Duration interval, ScheduledExecutorService executor) throws E {
         currentValue = initialValue;
+        this.supplier = supplier;
         (executor != null ? executor : SingletonHolder.DEFAULT_POOL)
                 .scheduleWithFixedDelay(this::refresh, interval.toMillis(), interval.toMillis(), TimeUnit.MILLISECONDS);
     }
@@ -53,19 +53,15 @@ public class Refreshable<T, E extends Exception> implements Supplier<T>
 
         private final Duration interval;
         private Throwing.Supplier<T,E> supplier;
-        private Consumer<Exception> errorCallback;
+        private BiConsumer<Integer,Exception> errorCallback;
 
-        private Builder(Duration interval, Throwing.Supplier<T,E> supplier, Consumer<Exception> callback) {
+        private Builder(Duration interval, Throwing.Supplier<T,E> supplier, BiConsumer<Integer,Exception> errorCallback) {
             this.interval = interval;
-            this.supplier = () -> null;
+            this.supplier = supplier;
+            this.errorCallback = errorCallback;
         }
 
-        private <T2,E2 extends Exception> Builder<T2,E2> Builder(Duration interval, Throwing.Supplier<T2,E2> supplier) {
-            return new Builder(interval, supplier, errorCallback);
-
-        }
-
-        public Builder<T,E> onBackgroundError(Consumer<E> errorCallback) {
+        public Builder<T,E> onBackgroundError(BiConsumer<Integer, E> errorCallback) {
             return new Builder(interval, supplier, errorCallback);
         }
 
